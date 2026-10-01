@@ -1,0 +1,104 @@
+{
+  "at": "2026-09-22T23:19:17.770Z",
+  "results": [
+    {
+      "id": "9router",
+      "envKey": "LITELLM_API_KEY_9ROUTER",
+      "masked": "sk-3***************************8f35",
+      "has": true,
+      "label": "OK",
+      "note": "autenticada",
+      "latency": 1699,
+      "detail": "modelos: 187",
+      "http": 200
+    },
+    {
+      "id": "openrouter",
+      "envKey": "LITELLM_API_KEY_OPENROUTER",
+      "masked": "sk-o*****************************************************************fef3",
+      "has": true,
+      "label": "OK",
+      "note": "autenticada",
+      "latency": 141,
+      "detail": "modelos: 454",
+      "http": 200
+    },
+    {
+      "id": "nvidia",
+      "envKey": "NVIDIA_API",
+      "masked": "nvap**************************************************************0BTr",
+      "has": true,
+      "label": "OK",
+      "note": "autenticada",
+      "latency": 398,
+      "detail": "modelos: 82",
+      "http": 200
+    },
+    {
+      "id": "mistral",
+      "envKey": "MISTRAL_API",
+      "masked": "mstr*************************************7ldC",
+      "has": true,
+      "label": "OK",
+      "note": "autenticada",
+      "latency": 337,
+      "detail": "modelos: 46",
+      "http": 200
+    },
+    {
+      "id": "groq",
+      "envKey": "GROQ_API",
+      "masked": "gsk_************************************************Z4v5",
+      "has": true,
+      "label": "OK",
+      "note": "autenticada",
+      "latency": 333,
+      "detail": "modelos: 11",
+      "http": 200
+    },
+    {
+      "id": "groq(meta)",
+      "envKey": "META_API_KEY",
+      "masked": "gsk_************************************************8o6c",
+      "has": true,
+      "label": "OK",
+      "note": "autenticada",
+      "latency": 227,
+      "detail": "modelos: 11",
+      "http": 200
+    },
+    {
+      "id": "deepseek",
+      "envKey": "DEEPSEEK_API_KEY",
+      "masked": "sk-4***************************2c64",
+      "has": true,
+      "label": "OK",
+      "note": "autenticada",
+      "latency": 486,
+      "detail": "modelos: 2",
+      "http": 200
+    },
+    {
+      "id": "cohere",
+      "envKey": "COHERE_API_KEY",
+      "masked": "cohe*********************************************34B6",
+      "has": true,
+      "label": "OK",
+      "note": "autenticada",
+      "latency": 270,
+      "detail": "modelos: 20",
+      "http": 200
+    },
+    {
+      "id": "polinai",
+      "envKey": "POLINAI_API",
+      "masked": "sk_w***************************fDrQ",
+      "has": true,
+      "label": "FALHA 404",
+      "note": "\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">",
+      "latency": 885,
+      "detail": " <html><head> <meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\"> <title>404 Page not found</title> </head> <body text=#000000 bgcolor=#ffffff> <h1>Error: Page not f | chat 404:  <html><head> <meta http-eq",
+      "http": 404
+    }
+  ]
+}

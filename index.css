@@ -1,0 +1,137 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 
+  BASE THEME (Normal/Dark) - Padrão do Tailwind
+*/
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0f172a; /* slate-950 */
+  color: #f8fafc; /* slate-50 */
+  transition: background 0.5s ease, color 0.3s ease;
+}
+
+/* SCROLLBARS */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #1e293b; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+/* =========================================
+   THEME: WRITE (Light Mode / Paper) 
+   Foco: Legibilidade Máxima & Contraste
+   ========================================= */
+[data-theme='write'] {
+  --tw-bg-opacity: 1;
+  background-color: #f8fafc !important; /* slate-50 */
+  color: #0f172a !important; /* slate-900 */
+}
+
+/* Scrollbar Claro */
+[data-theme='write'] ::-webkit-scrollbar-track { background: #f1f5f9; }
+[data-theme='write'] ::-webkit-scrollbar-thumb { background: #94a3b8; }
+
+/* Inversão de Componentes de Layout */
+[data-theme='write'] .bg-slate-950 { background-color: #ffffff !important; border-color: #e2e8f0 !important; }
+[data-theme='write'] .bg-slate-900 { background-color: #f1f5f9 !important; border-color: #cbd5e1 !important; }
+[data-theme='write'] .bg-slate-800 { background-color: #e2e8f0 !important; border-color: #cbd5e1 !important; }
+[data-theme='write'] .border-slate-800, [data-theme='write'] .border-slate-700 { border-color: #cbd5e1 !important; }
+
+/* Inversão de Texto Básico */
+[data-theme='write'] .text-slate-200, [data-theme='write'] .text-white { color: #0f172a !important; }
+[data-theme='write'] .text-slate-300 { color: #334155 !important; }
+[data-theme='write'] .text-slate-400, [data-theme='write'] .text-slate-500 { color: #475569 !important; }
+
+/* Inputs */
+[data-theme='write'] input, [data-theme='write'] textarea, [data-theme='write'] select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* --- CORREÇÃO DE CONTRASTE (Cores Claras -> Cores Escuras) --- */
+/* Amarelo/Dourado */
+[data-theme='write'] .text-yellow-400, [data-theme='write'] .text-yellow-300, [data-theme='write'] .text-yellow-500 { color: #d97706 !important; /* amber-600 */ }
+/* Verde/Lime */
+[data-theme='write'] .text-lime-400 { color: #15803d !important; /* green-700 */ }
+[data-theme='write'] .text-green-400, [data-theme='write'] .text-emerald-400 { color: #047857 !important; /* emerald-700 */ }
+/* Azul/Ciano */
+[data-theme='write'] .text-cyan-400, [data-theme='write'] .text-sky-400 { color: #0284c7 !important; /* sky-600 */ }
+[data-theme='write'] .text-blue-400 { color: #2563eb !important; /* blue-600 */ }
+/* Roxo/Rosa */
+[data-theme='write'] .text-indigo-400 { color: #4f46e5 !important; /* indigo-600 */ }
+[data-theme='write'] .text-violet-400 { color: #7c3aed !important; /* violet-600 */ }
+[data-theme='write'] .text-fuchsia-400, [data-theme='write'] .text-pink-400 { color: #db2777 !important; /* pink-600 */ }
+/* Vermelho/Laranja */
+[data-theme='write'] .text-rose-400, [data-theme='write'] .text-red-400 { color: #dc2626 !important; /* red-600 */ }
+[data-theme='write'] .text-orange-400 { color: #ea580c !important; /* orange-600 */ }
+
+
+/* =========================================
+   THEME: COLOR (Vibrant / Neon Glass)
+   Foco: Inspiração, Cores Chamativas, Alto Contraste
+   ========================================= */
+[data-theme='color'] {
+  /* Gradiente Animado Intenso (Laranja -> Pink -> Roxo -> Azul) */
+  background: linear-gradient(-45deg, #ff5e00, #ff0055, #a200ff, #00ccff) !important;
+  background-size: 400% 400%;
+  animation: gradientBG 12s ease infinite;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Painéis Glassmorphism Escuros (Para contraste com texto branco) */
+[data-theme='color'] .bg-slate-950,
+[data-theme='color'] .bg-slate-900,
+[data-theme='color'] aside {
+  background-color: rgba(0, 0, 0, 0.75) !important; /* Vidro Escuro */
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Inputs Translúcidos */
+[data-theme='color'] input,
+[data-theme='color'] textarea,
+[data-theme='color'] select {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+/* Botões com efeito Glass */
+[data-theme='color'] button.bg-slate-800 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme='color'] button.bg-slate-800:hover {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Melhorar leitura de textos cinza */
+[data-theme='color'] .text-slate-300,
+[data-theme='color'] .text-slate-400 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+[data-theme='color'] .text-slate-500 {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Neon Glow nos ícones coloridos */
+[data-theme='color'] .text-yellow-400 { text-shadow: 0 0 12px rgba(250, 204, 21, 0.6); }
+[data-theme='color'] .text-cyan-400 { text-shadow: 0 0 12px rgba(34, 211, 238, 0.6); }
+[data-theme='color'] .text-fuchsia-400 { text-shadow: 0 0 12px rgba(232, 121, 249, 0.6); }
+[data-theme='color'] .text-lime-400 { text-shadow: 0 0 12px rgba(163, 230, 53, 0.6); }
+[data-theme='color'] .text-orange-400 { text-shadow: 0 0 12px rgba(251, 146, 60, 0.6); }

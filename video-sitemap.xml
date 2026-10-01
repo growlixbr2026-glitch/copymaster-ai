@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https://copymaster-ai.vercel.app/</loc>
+    <video:video>
+      <video:thumbnail_loc>https://copymaster-ai.vercel.app/og-image.jpg</video:thumbnail_loc>
+      <video:title>CopyMaster AI - Sistema de Copywriting e SEO Profissional</video:title>
+      <video:description>Conheça a suíte completa de criação de conteúdo por IA. Gere copys, roteiros de YouTube e estratégias de marketing em segundos com o CopyMaster AI.</video:description>
+      <video:content_loc>https://copymaster-ai.vercel.app/demo-video.mp4</video:content_loc>
+      <video:player_loc>https://copymaster-ai.vercel.app/?v=demo</video:player_loc>
+      <video:duration>120</video:duration>
+      <video:view_count>1000</video:view_count>
+      <video:publication_date>2024-05-20T00:00:00+00:00</video:publication_date>
+      <video:family_friendly>yes</video:family_friendly>
+      <video:tag>copywriting</video:tag>
+      <video:tag>marketing digital</video:tag>
+      <video:tag>inteligencia artificial</video:tag>
+      <video:tag>youtube seo</video:tag>
+      <video:category>Business</video:category>
+    </video:video>
+  </url>
+</urlset>

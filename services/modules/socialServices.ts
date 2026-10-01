@@ -1,0 +1,1 @@
+// ARQUIVO APAGADO - USE services/modules/social/*.ts

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /wallet
+
+Sitemap: https://copymaster-ai.vercel.app/sitemap.xml
+Sitemap: https://copymaster-ai.vercel.app/video-sitemap.xml
