@@ -8,7 +8,7 @@ Veredito para seu cenário (app só em `localhost`, sem `--host`, sem publicar `
 2. `vercel.json` — CSP sem `esm.sh`/`cdn.tailwindcss.com`; adicionados `object-src 'none'` e `upgrade-insecure-requests`. Mantido `unsafe-inline` (Vite precisa; remover quebraria).
 3. `api/pin.ts` — `thumbUrl` (og:image) agora exige `https:` e rejeita host privado (`localhost`, `127/8`, `10/8`, `192.168/16`, `172.16-31/16`, `169.254.169.254`, metadata). Pins legítimos (https pinimg) não são afetados.
 4. `vite.config.ts` — comentário de aviso: `define` embute `.env` no bundle. Não mudei o comportamento (remover quebraria `aiClient resolveEnvKey`).
-5. `scripts/check-bundle-secrets.py` + `npm run security:bundle` — prova o vazamento: `dist/` gerado com seu `.env` real contém `sk-397c…` e `sk-or-v1-3930…` em `aiClient-*.js`, `SettingsCenter-*.js`. Para distribuir, rebuild com `.env` vazio/exemplo.
+5. `scripts/check-bundle-secrets.py` + `npm run security:bundle` — prova o vazamento: `dist/` gerado com seu `.env` real contém chaves (`sk-…` e `sk-or-v1-…`, prefixos redigidos) em `aiClient-*.js`, `SettingsCenter-*.js`. Para distribuir, rebuild com `.env` vazio/exemplo.
 6. `jspdf 2.5.2 → 4.2.1` — zera a crítica (GHSA path-traversal/ReDoS/PDF-JS-injection) e os 12 bypasses de `dompurify` transitiva. `services/pdfService.ts` usa só API básica (`new jsPDF`, `text`, `splitTextToSize`, `save`), estável entre majors. `npm audit`: 6 vulns (1 crítica) → 4 (0 crítica).
 7. `package.json` — adicionados `security:bundle` e `security:audit`. `npm update` aplicado (10 pacotes); `gaxios 6.7.1`/`uuid 9.0.1` continuam (fix exige major de `@google/genai` — não feito para não quebrar).
 
