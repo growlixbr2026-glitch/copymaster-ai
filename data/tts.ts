@@ -31,7 +31,7 @@ export interface TTSPlatform {
 export const TTS_DURATION_MIN = 10;
 export const TTS_DURATION_MAX = 120;
 export const TTS_DURATION_STEP = 5;
-// Fala natural PT-BR ≈ 156 palavras por minuto (2,6 palavras/s).
+// Fonte: estudo de ritmo de fala natural PT-BR (156 palavras/min = 2.6 palavras/seg)
 export const TTS_WORDS_PER_SECOND = 2.6;
 
 export const TTS_DURATION_OPTIONS: number[] = Array.from(

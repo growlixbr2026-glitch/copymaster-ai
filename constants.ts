@@ -1,7 +1,3 @@
-
-
-
-
 // IMPORTS MODULARES
 import * as Global from './data/global';
 import * as Social from './data/social';
@@ -10,11 +6,25 @@ import * as Visual from './data/visuals';
 import * as Creative from './data/creative';
 import * as Citation from './data/citations';
 
+// TTS Platforms - explicit exports
+export {
+    TTS_PLATFORMS,
+    TTS_DURATION_OPTIONS,
+    TTS_DURATION_MIN,
+    TTS_DURATION_MAX,
+    TTS_DURATION_STEP,
+    TTS_WORDS_PER_SECOND,
+    estimateWordsForDuration,
+    clampDuration,
+    getTTSPlatform,
+    getVoicesFor,
+    type TTSChoice,
+    type TTSPlatform,
+} from './data/tts';
+
 // Re-exports diretos para compatibilidade
 export const { GLOBAL_LANGUAGES, IMAGE_AIS, VIDEO_AIS, VIBE_CODING_PLATFORMS, VIDEO_RATIOS } = Global;
 export const { MAGAZINE_PRESETS, MAGAZINE_MOODS, VISUAL_COLORS, VISUAL_TEXTURES } = Visual;
-// Plataformas TTS da aba Áudio (9 provedores com vozes só PT-BR) + duração/estimativa de palavras
-export * from './data/tts';
 
 // FUNÇÃO MESTRA DE LOCALIZAÇÃO
 export const getLocalizedLists = (langCode: string) => {
