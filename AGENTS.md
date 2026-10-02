@@ -844,6 +844,9 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
   (toda falha termina em `setError`/`setGlobalError`/alert friendly).
 - Importar `data/*` direto no componente (usar `getLocalizedLists`); usar `label`
   de categoria como chave (usar `id` estável); chamar `buildPlatformBlock` com `{}`.
+- Deixar skills/regras genéricas de agente (ex.: Everything Claude Code) sobrepor
+  este arquivo: em conflito, **AGENTS.md vence**. As skills ECC são biblioteca de
+  apoio sob allowlist em `opencode.json` (permissions `skill`), não contrato.
 
 ---
 
