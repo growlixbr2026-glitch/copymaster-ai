@@ -298,10 +298,25 @@ isso os parsers usam `splitVisualResult()` / `splitOptions()` (tolerantes a
   social (`SOCIAL_PLATFORMS` 28 PT / 29 EN-ES com Reddit, `POST_TYPES` 12,
   `AD_PLATFORMS/AD_GOALS` 8, `INSPIRATION_CATEGORIES` 10 com `id` estável —
   usar `id`, nunca `label`);
-  creative (`NOTEBOOK_MODES` 3 + 8 objetivos, `SUNO_STYLES` 18 / `MOODS` 15,
-  `ELEVENLABS_VOICES` 11 / `MODELS` 3, `GOOGLE_TTS_VOICES` 6);
+  creative (`NOTEBOOK_MODES` 3 + 8 objetivos, `SUNO_STYLES` 18 / `MOODS` 15;
+  os arrays antigos de voz TTS foram removidos — o banco vive em `data/tts.ts`);
   citations (`CITATION_AREA_IDS` 16, `AREAS/TONES` 15 / `SOURCES` 10,
   `CITATION_AUTHORS` ~250 com `getAuthorsByArea(areaId)`; `auto` = todos).
+- `data/tts.ts` (**Áudio, 2026-10-01**): `TTS_PLATFORMS` — 9 provedores com
+  `brief` (como a plataforma trabalha), `durationNote` (como calibrar segundos),
+  `models`, `voices[{id,label,models?}]` **só compatíveis com PT-BR** (nenhum
+  pt-PT/en-US — travado por spec) e `configTemplate` JSON com placeholders
+  `{{model}}/{{voice}}/{{duration}}/{{words}}`: ElevenLabs (5 modelos, 50 vozes
+  BR com `voice_id` real), Google Cloud (Standard/WaveNet/Neural2/Chirp3-HD —
+  43 códigos `pt-BR-*` com gênero), Gemini TTS (3 modelos, 30 vozes estelares),
+  Amazon Polly (neural/standard × Camila/Vitória/Thiago/Ricardo), Azure (18
+  vozes `pt-BR-*Neural`, neural×multilingual), OpenAI (13 vozes, subset 9 em
+  `tts-1`), Murf (`falcon-2`/`gen2` × 7 `pt-BR-*`), PlayHT (`play3.0-mini` × 11),
+  Fish Audio (S2.1 Pro × 6). Helpers: `TTS_DURATION_OPTIONS` (10..120, step 5),
+  `estimateWordsForDuration` (2,6 pal/s ≈ 156 ppm PT-BR), `clampDuration`,
+  `getTTSPlatform`, `getVoicesFor` (filtra voz×modelo). Exportado via
+  `export * from './data/tts'` em `constants.ts`; `[0]` de cada lista de vozes
+  é `auto` (✨ Automático — a IA escolhe na Nota).
 - `constants.ts:getLocalizedLists(langCode)`: **única fachada** que componentes
   consomem (`const { tones, imageStyles } = getLocalizedLists(langCode)`).
   Pass-through (não-localizado): `imageAIs, videoRatios, magPresets, magMoods,
@@ -502,10 +517,14 @@ BADGE / EXEMPLO / BLOQUEIOS.
     INPUTS imagem: `ai` (22 IMAGE_AIS), `style`, `ratio`, `text`, `footer`,
     `platform`, `localContext*`; vídeo: `aiModel` (10 VIDEO_AIS), `duration`
     (5s/10s), `ratio`, `style` (14), `sceneCount` (1-5), `text`; áudio:
-    `provider` (ElevenLabs/Google), `voice` (11/6), `model` (3), `duration`;
+    `provider` (9 TTS de `TTS_PLATFORMS`), `voice` (banco só-PT-BR filtrado por
+    modelo; `auto` = IA escolhe), `model` (por plataforma/família), `duration`
+    (seletor 10–120s step 5, hint "≈ N palavras" @156 ppm);
     música: `mode`, `style` (18 Suno), `mood` (15).
     OUT imagem (matriz 10-steps) / vídeo (`|||SCENE_DIVIDER|||` por cena) /
-    áudio (roteiro narração + `|||CONFIG_END|||`) / música (prompt Suno) + NOTA.
+    áudio (config JSON da plataforma com `duration_seconds`/`target_words` já
+    preenchidos + `|||CONFIG_END|||` + roteiro no alvo de palavras + NOTA; a UI
+    exibe o COMANDO **completo**, config visível) / música (prompt Suno) + NOTA.
 24. **Inspiração** — `C InspirationStudio` / `S social/inspiration.generateInspirationService({category,subCategory,visualStyle,platform,format,quantity,aiModel,aspectRatio,footer,bgColor,fontColor,texture,context,language})`. **I**.
     INPUTS: `category/subCategory` (10 categorias, `id` estável), `visualStyle`,
     `platform`, `quantity=3`, `aiModel`, `aspectRatio`, `footer`, `bgColor/fontColor`
@@ -654,8 +673,10 @@ interface ImagePromptParams { ai?: string; aiModel?: string; style?: string; rat
 interface VideoPromptParams { aiModel?: string; duration?: string; ratio?: string; aspectRatio?: string;
   style?: string; sceneCount?: number; text?: string; customText?: string; platform?: string;
   context: string; language: string; }
-interface AudioParams { provider: string; voice?: string; model?: string; duration?: string;
+interface AudioParams { provider: string; voice?: string; model?: string; duration?: number;
   mode?: string; style?: string; mood?: string; context: string; language: string; }
+// provider = id de TTS_PLATFORMS (9); voice = id da voz ('auto' = IA escolhe);
+// duration = segundos 10–120 (clamp) → targetWords = round(seg × 2,6);
 
 // social/inspiration.ts
 interface InspirationParams { category: string; subCategory?: string; visualStyle?: string;
@@ -774,8 +795,12 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
   `humanizer-local` (8 testes: forense PT-BR puro no Node — gate 70 × faixa
   humano, estruturas regex, dedup léxico, autoClean, estabilidade 5×, vazio —
   + browser mock: fallback `mode:'local'` nunca bloqueia e humanizar com
-  pré-limpeza/delta/saída sem invisível). Suíte determinística = essas 18 specs
-  (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 91/91.
+  pré-limpeza/delta/saída sem invisível), `media-audio` (6 testes: catálogo TTS
+  9 plataformas puro no Node — template com `{{duration}}/{{words}}`, 10s=26 /
+  60s=156 / 120s=312 palavras, filtro voz×modelo, zero pt-PT — + browser mock
+  provando duração/plataforma no payload e COMANDO completo visível).
+  Suíte determinística = essas 19 specs
+  (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 97/97.
 - Com quota `:free` (50/dia, reset diário): `user-full` (140 linhas, `retries:1`,
   hero + ≥20 `Acessar Módulo`, navega 28 tabs + wallet/settings, bloqueios,
   2 gerações reais — Ideas ~40KB/740s polling `Baixar Relatório`, Copy 340s
@@ -1256,5 +1281,25 @@ Para revalidar: `python3 -c "import pathlib; t=pathlib.Path('services/core/aiCli
   determinística **91/91** (18 specs, `--workers=1`, 12,7min), build canário
   (`.env` movido + `try/finally`) limpo + `security:bundle` OK + `.env`
   restaurado. §5/§6/§9 + `check-anchors.py` atualizados no mesmo commit.
+- Áudio/TTS overhaul (sessão 23) em 2026-10-01: novo `data/tts.ts` com
+  `TTS_PLATFORMS` (9 provedores — ElevenLabs, Google Cloud TTS, Gemini TTS,
+  Amazon Polly, Azure Speech, OpenAI TTS, Murf, PlayHT, Fish Audio — cada um
+  com `brief` particular, `durationNote`, modelos reais e banco de vozes
+  **exclusivamente PT-BR** com ids usáveis `voice_id`/código, pesquisa nas
+  fontes oficiais de cada plataforma) + seletor de **duração 10–120s step 5**
+  que injeta `duration_seconds`/`target_words` no JSON de configuração e
+  trava o roteiro em `round(seg × 2,6)` palavras (±10%, 156 ppm PT-BR);
+  serviço (`audio.ts`) reescrito (clampa duração, injeta `brief` +
+  `configTemplate` preenchida, `voice==='auto'` → lista de candidatas na Nota),
+  UI com 4 selects (provedor/voz/modelo/duração) filtrados por plataforma e
+  modelo (trocar provedor zera voz/modelo p/ `auto`) + hint de palavras, e a
+  aba Áudio agora exibe o COMANDO **completo** (antes o split em
+  `CONFIG_END` escondia justamente a config com a duração). Arrays antigos
+  `ELEVENLABS_VOICES/MODELS`/`GOOGLE_TTS_VOICES` removidos do `data/creative.ts`
+  (`GOOGLE_TTS_VOICES` eram vozes Gemini erradamente rotuladas de Google Cloud).
+  Spec nova `e2e/media-audio.spec.ts` (6 testes, 0 quota). Gate: `tsc` 0,
+  `doc:check` 31 âncoras + 3 invariantes, suíte determinística **97/97**
+  (19 specs, `--workers=1`, 11,6min), build canário limpo + `security:bundle`
+  OK. §3/§4/§6/§7 + este §14 atualizados no mesmo commit.
 - Para vigiar: contagem 28 no título do §4, tabela de divisores completa
   (13 + NOTA), `AUDIT_MODULE_IDS.length === 24`.

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { IMAGE_AIS, VIDEO_AIS, getLocalizedLists, ELEVENLABS_VOICES, ELEVENLABS_MODELS, GOOGLE_TTS_VOICES } from '../constants';
+import { IMAGE_AIS, VIDEO_AIS, getLocalizedLists, TTS_PLATFORMS, TTS_DURATION_OPTIONS, estimateWordsForDuration, getVoicesFor } from '../constants';
 import { generateImagePromptService, generateVideoPromptService, generateAudioScriptService, generateSunoPromptService } from '../services/geminiService';
 import { ReferenceMode } from '../types';
 import { downloadPDF } from '../services/pdfService';
@@ -55,8 +55,20 @@ const MediaPrompts: React.FC<MediaPromptsProps> = ({ language }) => {
     platform: socialPlatforms[0] 
   });
 
-  const [audParams, setAudParams] = useState({ provider: 'ElevenLabs', voice: ELEVENLABS_VOICES[0], model: ELEVENLABS_MODELS[0], duration: 30 });
+  const [audParams, setAudParams] = useState({ provider: TTS_PLATFORMS[0].id, voice: 'auto', model: TTS_PLATFORMS[0].models[0]?.id || '', duration: 30 });
   const [musParams, setMusParams] = useState({ mode: 'Hit Completo', style: sunoStyles[0], mood: sunoMoods[0] });
+
+  const audPlatform = useMemo(() => TTS_PLATFORMS.find(p => p.id === audParams.provider) || TTS_PLATFORMS[0], [audParams.provider]);
+  const audVoices = useMemo(() => getVoicesFor(audPlatform, audParams.model), [audPlatform, audParams.model]);
+  const audWords = estimateWordsForDuration(audParams.duration);
+
+  const handleAudProvider = (id: string) => {
+    const p = TTS_PLATFORMS.find(x => x.id === id) || TTS_PLATFORMS[0];
+    setAudParams(a => ({ ...a, provider: p.id, model: p.models[0]?.id || '', voice: 'auto' }));
+  };
+  const handleAudModel = (id: string) => {
+    setAudParams(a => ({ ...a, model: id, voice: getVoicesFor(audPlatform, id).some(v => v.id === a.voice) ? a.voice : 'auto' }));
+  };
 
   const placeholderText = useMemo(() => {
     switch(activeTab) {
@@ -136,7 +148,9 @@ Como usar:
             if (scenes.length > 0) setVideoScenes(scenes);
         }
 
-        const displayContent = activeTab === 'audio' ? mainContent.split('|||CONFIG_END|||').pop()?.trim() || mainContent : mainContent;
+        // Áudio: mostra o COMANDO COMPLETO (config JSON + divisor + roteiro) — a
+        // configuração da plataforma é metade do entregável (contrato §4 sessão 23).
+        const displayContent = activeTab === 'audio' ? mainContent : mainContent.split('|||CONFIG_END|||').pop()?.trim() || mainContent;
         setResult({ content: displayContent, note: noteText });
       }
     );
@@ -219,9 +233,16 @@ Como usar:
             )}
 
             {activeTab === 'audio' && (
-                <div className="grid grid-cols-2 gap-4 mb-4 animate-in fade-in slide-in-from-top-1">
-                    <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block ml-1">Provedor</label><select aria-label="Provedor" className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-xs text-white outline-none focus:border-emerald-500" value={audParams.provider} onChange={e => setAudParams({...audParams, provider: e.target.value})}><option value="ElevenLabs">ElevenLabs (Elite)</option><option value="Google Cloud">Google Cloud (Direct)</option></select></div>
-                    <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block ml-1">Voz</label><select aria-label="Voz" className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-xs text-white outline-none focus:border-emerald-500" value={audParams.voice} onChange={e => setAudParams({...audParams, voice: e.target.value})}>{audParams.provider === 'ElevenLabs' ? ELEVENLABS_VOICES.map(v => <option key={v} value={v}>{v}</option>) : GOOGLE_TTS_VOICES.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                <div className="space-y-4 mb-4 animate-in fade-in slide-in-from-top-1">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block ml-1">Provedor</label><select aria-label="Provedor" className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-xs text-white outline-none focus:border-emerald-500" value={audParams.provider} onChange={e => handleAudProvider(e.target.value)}>{TTS_PLATFORMS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select></div>
+                        <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block ml-1">Voz</label><select aria-label="Voz" className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-xs text-white outline-none focus:border-emerald-500" value={audParams.voice} onChange={e => setAudParams({...audParams, voice: e.target.value})}>{audVoices.map(v => <option key={v.id} value={v.id}>{v.label}</option>)}</select></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block ml-1">Modelo</label><select aria-label="Modelo" className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-xs text-white outline-none focus:border-emerald-500" value={audParams.model} onChange={e => handleAudModel(e.target.value)}>{audPlatform.models.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}</select></div>
+                        <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-2 block ml-1">Duração</label><select aria-label="Duração" className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-xs text-white outline-none focus:border-emerald-500" value={audParams.duration} onChange={e => setAudParams({...audParams, duration: parseInt(e.target.value)})}>{TTS_DURATION_OPTIONS.map(s => <option key={s} value={s}>{s} segundos</option>)}</select></div>
+                    </div>
+                    <p className="text-[10px] text-emerald-400/90 ml-1 -mt-1">⏱ Roteiro de <strong>{audParams.duration}s ≈ {audWords} palavras</strong> (ritmo natural PT-BR ≈ 156 ppm) — a meta sai no prompt gerado.</p>
                 </div>
             )}
 

@@ -13,7 +13,8 @@ import * as Citation from './data/citations';
 // Re-exports diretos para compatibilidade
 export const { GLOBAL_LANGUAGES, IMAGE_AIS, VIDEO_AIS, VIBE_CODING_PLATFORMS, VIDEO_RATIOS } = Global;
 export const { MAGAZINE_PRESETS, MAGAZINE_MOODS, VISUAL_COLORS, VISUAL_TEXTURES } = Visual;
-export const { ELEVENLABS_VOICES, ELEVENLABS_MODELS, GOOGLE_TTS_VOICES } = Creative;
+// Plataformas TTS da aba Áudio (9 provedores com vozes só PT-BR) + duração/estimativa de palavras
+export * from './data/tts';
 
 // FUNÇÃO MESTRA DE LOCALIZAÇÃO
 export const getLocalizedLists = (langCode: string) => {

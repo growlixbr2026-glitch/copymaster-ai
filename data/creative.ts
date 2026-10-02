@@ -46,7 +46,4 @@ export const SUNO_MOODS_EN = ["✨ Automatic (AI Feels)", "Catchy", "Inspiration
 export const SUNO_STYLES_ES = ["✨ Automático (IA Compone)", "Jingle Publicitario", "Corporativo Tech", "Energía Retail", "Infantil / Alegre", "Country / Folk", "Funk / Groove", "Samba / Latino", "Bossa Nova", "Pop Hit", "Rock Clássico", "Electrónica / EDM", "Lo-fi Hip Hop", "Cinemático / Épico", "Gospel", "Trap", "Heavy Metal"];
 export const SUNO_MOODS_ES = ["✨ Automático (IA Sente)", "Pegadizo", "Inspirador", "Feliz / Soleado", "Triste / Melancólico", "Tenso / Suspenso", "Épico / Grandioso", "Calmado / Zen", "Agresivo / Power", "Romántico / Suave", "Misterioso / Oscuro", "Sensual / Seductor", "Divertido / Ingenioso", "Nostálgico", "Futurista"];
 
-// ELEVENLABS / GOOGLE TTS
-export const ELEVENLABS_VOICES = ["✨ Automático (IA Escolhe)", "Adam (American, Deep, Narration)", "Antoni (American, Well-rounded)", "Rachel (American, Calm, Narration)", "Domi (American, Strong, Emotive)", "Elli (American, Young, Clear)", "Josh (American, Deep, Storyteller)", "Arnold (American, Crisp, Professional)", "Sam (American, Casual, Conversational)", "Bella (American, Soft, Serious)", "Clyde (American, Deep, Gravelly)"];
-export const ELEVENLABS_MODELS = ["Eleven Multilingual v2 (Best for PT-BR)", "Eleven Turbo v2.5 (Fastest)", "Eleven English v1"];
-export const GOOGLE_TTS_VOICES = ["✨ Automático (IA Escolhe)", "Puck (Neutral, Male-sounding)", "Charon (Deep, Male-sounding)", "Kore (Clarinet-like, Female-sounding)", "Fenrir (Deep, Authoritative)", "Zephyr (Calm, Female-sounding)"];
+// TTS (vozes/plataformas) vive em data/tts.ts — TTS_PLATFORMS + helpers de duração.
