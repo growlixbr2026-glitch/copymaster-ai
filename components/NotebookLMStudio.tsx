@@ -114,7 +114,7 @@ O Google NotebookLM é uma das ferramentas mais poderosas para processar conheci
             <div className="h-full flex flex-col items-center justify-center text-slate-800 p-6">{loading ? <RefreshCw className="w-16 h-16 mb-4 animate-spin text-lime-500" /> : <Notebook className="w-16 h-16 mb-4 opacity-5" />}<p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">{loading ? 'Estruturando Sabedoria...' : 'Aguardando Fonte de Conhecimento'}</p></div>
         )}
       </>
-  )} hasResults={!!result.content} />
+  )} hasResults={!!result.content} sessionId="notebook" />
   );
 };
 

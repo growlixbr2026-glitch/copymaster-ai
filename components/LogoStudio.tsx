@@ -126,7 +126,7 @@ Esta ferramenta não cria apenas um "desenho", ela arquiteta o DNA visual de uma
             <div className="h-full flex flex-col items-center justify-center text-slate-600 p-6">{loading ? <RefreshCw className="w-16 h-16 mb-4 animate-spin text-fuchsia-500" /> : <Palette className="w-16 h-16 mb-4 opacity-20" />}<p className="text-center text-slate-400">{loading ? 'Arquitetando Identidade...' : t('msg_wait_desc')}</p></div>
         )}
       </>
-  )} hasResults={!!results} />
+  )} hasResults={!!results} sessionId="logo" />
   );
 };
 

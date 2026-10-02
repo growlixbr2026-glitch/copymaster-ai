@@ -1,4 +1,6 @@
 import { callAI, GOLDEN_SYSTEM_INSTRUCTIONS } from '../../core/aiClient';
+import { COPY_TEMPLATES_PT } from '../../../data/copyTemplates';
+import { personaBlock } from './crewaiPersona';
 
 const getPlatformRules = (platformRaw: string, typeRaw: string) => {
     const p = (platformRaw || '').toLowerCase();
@@ -21,9 +23,17 @@ const getPlatformRules = (platformRaw: string, typeRaw: string) => {
 export const generateCopyService = async (params: any, onChunk?: (text: string) => void) => {
     const platformRules = getPlatformRules(params?.platform, params?.type);
 
+    // Se o usuário selecionou um framework direct-response específico, usa o template
+    const template = params?.methodology ? COPY_TEMPLATES_PT[params.methodology] : null;
+    const templateSection = template 
+        ? `\n⚠️ **TEMPLATE ESPECÍFICO: ${template.framework}** ⚠️\nSiga EXATAMENTE esta estrutura para cada variação:\n${template.structure}\n\n📌 **Exemplo de aplicação:** ${template.example}`
+        : '';
+
     const prompt = `
     ⚠️ **MODO OPERAÇÃO: MASTER COPYWRITER (ITEM 3, 24, 28)** ⚠️
+    ${personaBlock(params?.crewPersona)}
     ${platformRules}
+    ${templateSection}
 
     ⚠️ **HIERARQUIA DE VERDADE (REGRA #4 & #16):**
     Respeite 100% os seletores:

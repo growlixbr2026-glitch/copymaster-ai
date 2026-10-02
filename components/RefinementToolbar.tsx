@@ -3,9 +3,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Wand2, RefreshCw, Scissors, MoveHorizontal, SmilePlus,
   ShieldAlert, Fingerprint, Sparkles, CheckCircle2, MessageSquare,
-  Sliders, Download, ArrowUpRight, Copy, TextCursorInput, BadgeAlert
+  Sliders, Download, ArrowUpRight, Copy, TextCursorInput, BadgeAlert,
+  Braces
 } from 'lucide-react';
 import { refineCopyService, checkAIProbabilityService, humanizeTextService } from '../services/geminiService';
+import { optimizePromptService } from '../services/modules/tools/promptOptimizer';
 import { HUMANIZE_THRESHOLD } from '../services/modules/tools/aiDetection';
 import type { AISignalHit } from '../services/modules/tools/aiDetection';
 import { autoCleanText, stripInvisibleChars } from '../services/modules/tools/textForensics';
@@ -47,6 +49,7 @@ export const RefinementToolbar: React.FC<RefinementToolbarProps> = ({
   const [notice, setNotice] = useState<{kind: 'blocked' | 'done', text: string} | null>(null);
   const [customInstruction, setCustomInstruction] = useState('');
   const [targetLength, setTargetLength] = useState<string>('');
+  const [optimizedPrompt, setOptimizedPrompt] = useState<string | null>(null);
   
   // Pivot Settings
   const [pivotSettings, setPivotSettings] = useState({
@@ -72,9 +75,11 @@ export const RefinementToolbar: React.FC<RefinementToolbarProps> = ({
   // --- Helper to clean unwanted AI notes + Markdown (texto puro copia-cola) ---
   const cleanAIOutput = (rawText: string): string => {
       if (!rawText) return "";
-      // Remove divider and everything after it
-      let clean = rawText.split('|||NOTA_DIVIDER|||')[0];
+      // Nota fica após o ÚLTIMO NOTA_DIVIDER — tudo antes é entregável (seções 3+ não somem)
+      const lastNota = rawText.lastIndexOf('|||NOTA_DIVIDER|||');
+      let clean = lastNota >= 0 ? rawText.slice(0, lastNota) : rawText;
       clean = clean.split('|||DIVIDER|||')[0];
+      clean = clean.replace(/[ \t]*\|\|\|[A-Z_]+_DIVIDER\|\|\|[ \t]*/g, '\n\n');
 
       // Remove specific prefixes if they leak
       clean = clean.replace(/^(Aqui está|Here is|Segue|Opção \d+).{0,20}:\n/i, '');
@@ -204,6 +209,27 @@ export const RefinementToolbar: React.FC<RefinementToolbarProps> = ({
       alert("Texto definido como Contexto Global!");
   };
 
+  // Prompt Optimizer (meta-prompt pattern, prompts.chat): reestrutura o texto
+  // atual como prompt (ROLE/CONTEXT/TASK/CONSTRAINTS/OUTPUT FORMAT) sem perder
+  // fatos. NÃO substitui o conteúdo — mostra o prompt otimizado para copiar.
+  const handleOptimizePrompt = async () => {
+      if (!text || loading) return;
+      setLoading(true);
+      setNotice(null);
+      try {
+          const { text: optimized, error } = await optimizePromptService(text, language);
+          if (error) {
+              setNotice({ kind: 'blocked', text: toFriendlyError(error) });
+          } else {
+              setOptimizedPrompt(stripCopyMarkdown(optimized));
+          }
+      } catch (err: any) {
+          setNotice({ kind: 'blocked', text: toFriendlyError(err?.message || 'Falha ao otimizar o prompt.') });
+      } finally {
+          setLoading(false);
+      }
+  };
+
   if (!text) return null;
 
   return (
@@ -265,7 +291,22 @@ export const RefinementToolbar: React.FC<RefinementToolbarProps> = ({
         <button onClick={() => handleRefine("Resumir e ser direto")} disabled={loading} className="flex-1 min-w-[90px] bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded text-xs flex items-center justify-center gap-2 transition-colors border border-slate-700"><Scissors className="w-3 h-3" /> Encurtar</button>
         <button onClick={() => handleRefine("Simplificar a linguagem")} disabled={loading} className="flex-1 min-w-[90px] bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded text-xs flex items-center justify-center gap-2 transition-colors border border-slate-700"><CheckCircle2 className="w-3 h-3" /> Simplificar</button>
         <button onClick={() => handleRefine("Adicionar emojis estratégicos")} disabled={loading} className="flex-1 min-w-[90px] bg-indigo-900/30 hover:bg-indigo-900/50 text-indigo-300 py-2 rounded text-xs flex items-center justify-center gap-2 transition-colors border border-indigo-500/30 font-bold"><SmilePlus className="w-3 h-3" /> Emojis</button>
+        <button onClick={handleOptimizePrompt} disabled={loading} title="Reestrutura este texto como prompt profissional (ROLE / CONTEXT / TASK / CONSTRAINTS / OUTPUT FORMAT) — padrão prompts.chat" className="flex-1 min-w-[90px] bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 py-2 rounded text-xs flex items-center justify-center gap-2 transition-colors border border-purple-500/30 font-bold">{loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Braces className="w-3 h-3" />} Otimizar Prompt</button>
       </div>
+
+      {/* Prompt otimizado (meta-prompt pattern) */}
+      {optimizedPrompt && (
+          <div className="mb-3 bg-purple-950/40 border border-purple-500/30 rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-purple-300 font-bold uppercase tracking-widest flex items-center gap-1.5"><Braces className="w-3 h-3" /> Prompt Otimizado</span>
+                  <div className="flex gap-1.5">
+                      <button onClick={() => navigator.clipboard.writeText(optimizedPrompt).then(() => setNotice({ kind: 'done', text: 'Prompt otimizado copiado.' }))} className="text-[10px] text-purple-200 bg-purple-800/50 hover:bg-purple-700 px-2 py-1 rounded border border-purple-500/40 font-bold flex items-center gap-1"><Copy className="w-3 h-3" /> Copiar</button>
+                      <button onClick={() => setOptimizedPrompt(null)} className="text-[10px] text-slate-400 bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-600">Fechar</button>
+                  </div>
+              </div>
+              <pre className="text-[11px] text-purple-100 whitespace-pre-wrap font-mono max-h-48 overflow-y-auto custom-scrollbar bg-slate-950/60 p-2 rounded border border-slate-800">{optimizedPrompt}</pre>
+          </div>
+      )}
 
       {/* Custom Instruction */}
       <div className="flex gap-2 mb-3">

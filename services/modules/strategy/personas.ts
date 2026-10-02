@@ -1,4 +1,5 @@
 import { callAI, GOLDEN_SYSTEM_INSTRUCTIONS } from '../../core/aiClient';
+import { splitNotaBlock } from '../../../utils/stripCopyFormat';
 
 export const generatePersonasService = async (params: any, onChunk?: (text: string) => void) => {
     const { form, quantity, language } = params;
@@ -64,8 +65,7 @@ Generate exactly ${quantity} personas.`.trim();
 
     try {
         const fullText = response.text || '';
-        const parts = fullText.split("|||NOTA_DIVIDER|||");
-        const jsonPart = parts[0].trim();
+        const jsonPart = splitNotaBlock(fullText).content;
 
         let startIndex = jsonPart.indexOf('{');
         let endIndex = jsonPart.lastIndexOf('}');

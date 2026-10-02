@@ -143,6 +143,7 @@ Esta ferramenta é sua consultoria estratégica para criar apresentações que v
       actions={actions}
       mainContent={mainContent}
       hasResults={!!result.content}
+      sessionId="presentation"
     />
   );
 };

@@ -115,7 +115,7 @@ As frases de impacto são os ativos de maior compartilhamento orgânico. Esta fe
             <div className="h-full flex flex-col items-center justify-center text-slate-600 p-6">{loading ? <RefreshCw className="w-16 h-16 mb-4 animate-spin text-cyan-500" /> : <Quote className="w-16 h-16 mb-4 opacity-20" />}<p className="text-center text-slate-400">{loading ? 'Engenhando Impacto...' : t('msg_wait_desc')}</p></div>
         )}
       </>
-  )} hasResults={quotes.length > 0} />
+  )} hasResults={quotes.length > 0} sessionId="quote" />
   );
 };
 

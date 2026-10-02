@@ -115,7 +115,7 @@ O meme é a unidade mínima de cultura na internet. Esta ferramenta foca na "Psi
             <div className="h-full flex flex-col items-center justify-center text-slate-600 p-6">{loading ? <RefreshCw className="w-16 h-16 mb-4 animate-spin text-violet-500" /> : <Smile className="w-16 h-16 mb-4 opacity-20" />}<p className="text-center text-slate-400">{loading ? 'Engenhando Viralidade...' : t('msg_wait_desc')}</p></div>
         )}
       </>
-  )} hasResults={memeOptions.length > 0} />
+  )} hasResults={memeOptions.length > 0} sessionId="meme" />
   );
 };
 

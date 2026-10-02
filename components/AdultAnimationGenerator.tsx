@@ -96,7 +96,7 @@ Este módulo é especializado em criar roteiros com humor ácido, sátiras socia
   );
 
   return (
-    <ToolLayout title={t('aa_title')} icon={Tv} iconColorClass="text-orange-400" description={aaHelpDescription} loading={loading} error={error} isLocked={isLocked} onToggleLock={() => setIsLocked(!isLocked)} sidebarContent={sidebarContent} actions={(<button onClick={handleGenerate} disabled={loading || !localPremise || isLocked} className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg">{loading ? <RefreshCw className="animate-spin w-5 h-5" /> : <Tv className="w-5 h-5" />} {loading ? 'Animando...' : t('aa_btn')}</button>)} 
+    <ToolLayout title={t('aa_title')} icon={Tv} iconColorClass="text-orange-400" description={aaHelpDescription} loading={loading} error={error} isLocked={isLocked} onToggleLock={() => setIsLocked(!isLocked)} sidebarContent={sidebarContent} actions={(<button onClick={handleGenerate} disabled={loading || !localPremise || isLocked} className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg">{loading ? <RefreshCw className="animate-spin w-5 h-5" /> : <Tv className="w-5 h-5" />} {loading ? 'Animando...' : t('aa_btn')}</button>)} sessionId="adultanimation" 
       mainContent={(
       <>
         {result.content ? (

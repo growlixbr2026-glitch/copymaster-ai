@@ -212,7 +212,7 @@ Esta ferramenta busca citações reais de grandes nomes da história, textos bí
             <div className="h-full flex flex-col items-center justify-center text-slate-600 p-6">{loading ? <RefreshCw className="w-16 h-16 mb-4 animate-spin text-yellow-500" /> : <Quote className="w-16 h-16 mb-4 opacity-20" />}<p className="text-center text-slate-400">{loading ? 'Engenhando Inspiração...' : t('msg_wait_desc')}</p></div>
         )}
       </>
-  )} hasResults={results.length > 0} />
+  )} hasResults={results.length > 0} sessionId="inspiration" />
   );
 };
 

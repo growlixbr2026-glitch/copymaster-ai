@@ -109,6 +109,7 @@ async function runSession(page: any, s: { id: string; label: RegExp }, payloads:
     const sel = selects.nth(i);
     const aria = (await sel.getAttribute('aria-label').catch(() => '')) || '';
     if (/idioma|language/i.test(aria)) continue; // nunca troca o idioma global no meio da jornada
+    if (/persona|crewai/i.test(aria)) continue; // persona injeta ROLE/GOAL/BACKSTORY, nao o id
     const oc = await sel.locator('option').count();
     if (oc >= 2) {
       const v = await sel.locator('option').nth(oc - 1).getAttribute('value');

@@ -330,7 +330,7 @@ Sessão de Ideias — vasculhador gratuito: cruza Google Grounding + arXiv/PubMe
             <h2 className="text-3xl font-black flex items-center gap-3 text-yellow-400 uppercase tracking-tighter">
                 <Lightbulb className="w-10 h-10" /> {t('ideas_title')}
                 <OutputKindBadge kind="text" />
-                <SectionHelp title={t('ideas_title')} description={ideaHelpDescription} />
+                <SectionHelp title={t('ideas_title')} description={ideaHelpDescription} sessionId="ideas" />
             </h2>
             <button onClick={() => onNavigate ? onNavigate('home') : setAppActiveTab('home')} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all"><Home className="w-4 h-4" /> Início</button>
         </div>

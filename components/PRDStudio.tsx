@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Wand2, Link2, Terminal, Palette, Layers, Cpu, AlertCircle, RefreshCw, Brain, ImagePlus, Globe, BookOpen, ArrowUpRight } from 'lucide-react';
 import { getLocalizedLists, VIBE_CODING_PLATFORMS } from '../constants';
+import { CREWAI_MARKETING_PERSONAS } from '../data/crewai-personas';
 import { generatePRDService, PRD_DIVIDER } from '../services/geminiService';
 import { analyzeSiteImage, buildSiteDnaBlock, SiteDna, SiteScrape } from '../services/vision/siteDna';
 import { useTranslation } from '../hooks/useTranslation';
@@ -58,6 +59,10 @@ const PRDStudio: React.FC<PRDStudioProps> = ({ language }) => {
     integrations: '',
   });
   const [sections, setSections] = useState<string[]>([]);
+
+  // CrewAI: persona especialista (prompts.chat)
+  const [crewPersona, setCrewPersona] = useState('');
+  const prdPersonas = CREWAI_MARKETING_PERSONAS.filter(p => p.bestFor.includes('prd'));
 
   // Site de referência (opcional — liberdade total; quando presente, SOBRESCREVE)
   const [siteRefUrl, setSiteRefUrl] = useState('');
@@ -150,6 +155,7 @@ Responda as 5 perguntas opcionais para refinar (se pular, o sistema segue marcan
         siteRefUrl: siteRefUrl.trim(), siteDnaBlock: dnaBlock,
         q1: qs.q1, q2: qs.q2, q3: qs.q3, q4: qs.q4, q5: qs.q5,
         context: localContext, language,
+        crewPersona: crewPersona || undefined,
       }, onChunk),
       (streamedText) => {
         if (!streamedText || typeof streamedText !== 'string') return;
@@ -263,6 +269,13 @@ Responda as 5 perguntas opcionais para refinar (se pular, o sistema segue marcan
           <div><label className="text-[10px] text-slate-500 block mb-1 uppercase">Textura</label><select aria-label="Textura" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-[11px] text-slate-200 outline-none" value={params.texture} onChange={(e) => setParams({ ...params, texture: e.target.value })} disabled={loading || isLocked}><option value="">Auto</option>{(visualTextures || []).slice(1).map((c: string) => (<option key={c} value={c}>{c}</option>))}</select></div>
         </div>
         <div><label className="text-xs text-slate-400 block mb-1 uppercase font-bold">Integrações (só estático)</label><input aria-label="Integrações" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-slate-200 focus:border-cyan-500 outline-none" value={params.integrations} onChange={(e) => setParams({ ...params, integrations: e.target.value })} placeholder="Ex: form → webhook, GA4" disabled={loading || isLocked} /></div>
+        <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2">
+          <label className="text-xs text-slate-400 block uppercase font-bold flex items-center gap-1"><Brain className="w-3.5 h-3.5 text-purple-400" /> Persona CrewAI</label>
+          <select aria-label="Persona CrewAI" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-slate-200 focus:border-purple-500 outline-none" value={crewPersona} onChange={(e) => setCrewPersona(e.target.value)} disabled={loading || isLocked}>
+            <option value="">✨ Sem persona (padrão)</option>
+            {prdPersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}
+          </select>
+        </div>
       </div>
     </>
   );
@@ -334,6 +347,7 @@ Responda as 5 perguntas opcionais para refinar (se pular, o sistema segue marcan
       mainContent={mainContent}
       hasResults={!!result.prd}
       outputKind="text"
+      sessionId="prd"
     />
   );
 };

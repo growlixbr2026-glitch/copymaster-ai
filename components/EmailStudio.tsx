@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Wand2, Link2, Send, RefreshCw, Home, Brain } from 'lucide-react';
 import { getLocalizedLists } from '../constants';
+import { CREWAI_MARKETING_PERSONAS } from '../data/crewai-personas';
 import { generateEmailSequenceService } from '../services/geminiService';
+import { runCrewWorkflow } from '../services/modules/copy/crewaiWorkflowService';
 import { useTranslation } from '../hooks/useTranslation';
 import { SectionHelp } from './SectionHelp';
 import SpeechInput from './SpeechInput';
@@ -40,6 +42,11 @@ export default function EmailStudio({ language }: { language: string }) {
     targetAudience: '',
   });
 
+  // CrewAI: persona especialista (prompts.chat) + pipeline sequencial
+  const [crewPersona, setCrewPersona] = useState('');
+  const [useCrewAI, setUseCrewAI] = useState(false);
+  const emailPersonas = CREWAI_MARKETING_PERSONAS.filter(p => p.bestFor.includes('email'));
+
   const emailHelpDescription = `
 O que é o Estúdio de Email Marketing:
 Este módulo é uma usina de retenção e conversão. Diferente de geradores de texto simples, esta ferramenta arquiteta sequências lógicas que movem o lead através da jornada de compra.
@@ -56,8 +63,12 @@ Este módulo é uma usina de retenção e conversão. Diferente de geradores de 
   const handleGenerate = async () => {
     if (!localContext) { alert("Por favor, insira o contexto do e-mail."); return; }
     setEmails([]); setActiveEmailTab(0);
+    const crewContext = { ...params, count: String(params.count), context: localContext, language, crewPersona: crewPersona || '' };
     generateStream(
-        (onChunk) => generateEmailSequenceService({ ...params, context: localContext, language: language }, onChunk),
+        (onChunk) => useCrewAI
+          // Pipeline CrewAI real: estratégia → escrita (2 chamadas encadeadas)
+          ? runCrewWorkflow('email', crewContext, onChunk)
+          : generateEmailSequenceService({ ...params, context: localContext, language, crewPersona: crewPersona || undefined }, onChunk),
         (streamedText) => {
             const separator = "|||EMAIL_DIVIDER|||"; const noteSeparator = "|||NOTA_DIVIDER|||";
             let rawEmails = streamedText.split(separator);
@@ -89,6 +100,19 @@ Este módulo é uma usina de retenção e conversão. Diferente de geradores de 
       <div><label className="text-sm font-medium text-slate-300 block mb-1">{t('label_tone')}</label><select aria-label={t('label_tone')} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-sky-500 outline-none text-sm" value={params.tone} onChange={(e) => setParams({...params, tone: e.target.value})} disabled={loading || isLocked}>{tones.map(t => (<option key={t} value={t}>{t}</option>))}</select></div>
       <div><label className="text-sm font-medium text-slate-300 block mb-1">{t('email_sender')}</label><input aria-label="Ex: João da Silva" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-sky-500 outline-none text-sm" placeholder="Ex: João da Silva" value={params.senderName} onChange={(e) => setParams({...params, senderName: e.target.value})} disabled={loading || isLocked} /></div>
       <div><label className="text-sm font-medium text-slate-300 block mb-1">{t('email_audience')}</label><input aria-label="Ex: Donos de pequenas empresas..." type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-sky-500 outline-none text-sm" placeholder="Ex: Donos de pequenas empresas..." value={params.targetAudience} onChange={(e) => setParams({...params, targetAudience: e.target.value})} disabled={loading || isLocked} /></div>
+      <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2">
+        <label className="text-sm font-medium text-slate-300 flex items-center gap-1">
+          <Brain className="w-3.5 h-3.5 text-purple-400" /> Persona CrewAI
+        </label>
+        <select aria-label="Persona CrewAI" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-purple-500 outline-none" value={crewPersona} onChange={(e) => setCrewPersona(e.target.value)} disabled={loading || isLocked}>
+          <option value="">✨ Sem persona (padrão)</option>
+          {emailPersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}
+        </select>
+        <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+          <input type="checkbox" checked={useCrewAI} onChange={(e) => setUseCrewAI(e.target.checked)} disabled={loading || isLocked} className="accent-purple-500" />
+          Modo CrewAI (estratégia → escrita em 2 etapas)
+        </label>
+      </div>
       <div className="relative">
           <div className="absolute right-2 top-8 z-10 flex gap-2">
             {sharedContext && (
@@ -139,6 +163,7 @@ Este módulo é uma usina de retenção e conversão. Diferente de geradores de 
       actions={actions}
       mainContent={mainContent}
       hasResults={emails.length > 0}
+      sessionId="email"
     />
   );
 }

@@ -49,6 +49,7 @@ interface ToolLayoutProps {
   hasResults: boolean;
   actions?: React.ReactNode;
   outputKind?: OutputKind;
+  sessionId?: string; // Para guia F1 detalhado
 }
 
 export const ToolLayout: React.FC<ToolLayoutProps> = ({
@@ -64,7 +65,8 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   mainContent,
   hasResults,
   actions,
-  outputKind = 'text'
+  outputKind = 'text',
+  sessionId
 }) => {
   const { setActiveTab } = useSharedContext();
 
@@ -78,7 +80,7 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
             <h2 className={`text-xl font-bold flex items-center gap-2 ${iconColorClass}`}>
               <Icon className="w-6 h-6" aria-hidden="true" /> {title}
               <OutputKindBadge kind={outputKind} />
-              <SectionHelp title={title} description={description} />
+              <SectionHelp title={title} description={description} sessionId={sessionId} />
             </h2>
             
             <div className="flex items-center gap-2 relative z-10">

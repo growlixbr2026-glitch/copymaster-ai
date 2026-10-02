@@ -10,7 +10,7 @@ import { RefinementToolbar } from './RefinementToolbar';
 import { SectionHelp } from './SectionHelp';
 import { OutputKindBadge } from './ToolLayout';
 import { EngineLink } from './ToolLayout';
-import { splitVisualResult } from '../utils/stripCopyFormat';
+import { splitVisualResult, splitNotaBlock } from '../utils/stripCopyFormat';
 
 interface TikTokSuiteProps {
   language: string;
@@ -101,7 +101,7 @@ Este é o motor de crescimento mais rápido da aplicação. O algoritmo do TikTo
         // Modos de texto mantêm o parse original.
         const parsed = activeMode === 'cover'
             ? splitVisualResult(text)
-            : { content: text.split("|||NOTA_DIVIDER|||")[0]?.trim() || '', note: text.split("|||NOTA_DIVIDER|||")[1] ? text.split("|||NOTA_DIVIDER|||")[1].replace(/NOTA DO ESTRATEGISTA:[\s]*/i, '').trim() : '' };
+            : splitNotaBlock(text);
         const parts = [parsed.content, parsed.note];
         setOutputs(prev => ({
             ...prev,
@@ -122,7 +122,7 @@ Este é o motor de crescimento mais rápido da aplicação. O algoritmo do TikTo
                 <Video className="w-8 h-8 text-fuchsia-500" />
                 <h2 className="text-3xl font-black text-white tracking-tighter uppercase">TikTok Viral</h2>
                 <OutputKindBadge kind={activeMode === 'cover' ? 'image' : 'text'} />
-                <SectionHelp title="TikTok Viral" description={tiktokHelpDescription} />
+                <SectionHelp title="TikTok Viral" description={tiktokHelpDescription} sessionId="tiktok" />
             </div>
             <div className="flex items-center gap-3">
                 <button onClick={() => setAppActiveTab('home')} className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-slate-900/50 border border-slate-800 transition-all"> <Home className="w-3 h-3" /> Início</button>

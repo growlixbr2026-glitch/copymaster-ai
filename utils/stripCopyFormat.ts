@@ -147,3 +147,28 @@ export function stripLeakedDividers(raw: string): string {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
+
+/** Separa entreg_vel x Nota usando o ULTIMO |||NOTA_DIVIDER|||.
+ *  Multi-secoes ficam TODAS no entregavel (divisores remanescentes de NOTA viram
+ *  linha em branco; EMAIL/LAUNCH viram regua visivel). Usado por BridgeStudio e
+ *  pelos estudios Marketing Avan_ado - nunca descarta secoes do meio. */
+export function splitNotaBlock(streamedText: string): { content: string; note: string } {
+  if (!streamedText || typeof streamedText !== 'string') return { content: '', note: '' };
+  const marker = '|||NOTA_DIVIDER|||';
+  const idx = streamedText.lastIndexOf(marker);
+  const rawContent = idx >= 0 ? streamedText.slice(0, idx) : streamedText;
+  let content = rawContent
+    .replace(/[ \t]*\|\|\|NOTA_DIVIDER\|\|\|[ \t]*/g, '\n\n')
+    .replace(/[ \t]*\|\|\|(?:EMAIL|LAUNCH)_DIVIDER\|\|\|[ \t]*/g, '\n\n────────\n\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  // Guarda anti-JSON: envelope cru de provider nunca vira entregavel.
+  if (/^\s*\{"id"\s*:\s*"chatcmpl/i.test(content)) content = '';
+  const note = idx >= 0
+    ? streamedText.slice(idx + marker.length)
+        // Tolera rótulo com Markdown (**NOTA...** / NOTA...:) e ESTRATEGISTA/ESPECIALISTA, sem resíduo ****.
+        .replace(/[*_]{0,2}\s*NOTA DO (?:ESTRATEGISTA|ESPECIALISTA):?\s*[*_]{0,2}/ig, '')
+        .trim()
+    : '';
+  return { content, note };
+}

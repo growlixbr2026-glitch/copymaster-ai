@@ -91,7 +91,7 @@ Não tente ser "bonzinho". O Sexy Canvas funciona melhor quando você abraça o 
             <h2 className="text-2xl lg:text-3xl font-bold flex items-center gap-3 text-rose-400">
                 <Flame className="w-8 h-8" aria-hidden="true" /> {t('sexy_title')}
                 <OutputKindBadge kind="text" />
-                <SectionHelp title={t('sexy_title')} description={sexyHelpDescription} />
+                <SectionHelp title={t('sexy_title')} description={sexyHelpDescription} sessionId="sexy" />
             </h2>
             <div className="flex items-center gap-2">
             <button onClick={() => setAppActiveTab('home')} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-rose-500/80 hover:text-rose-200 hover:bg-rose-500/20 transition-all border border-transparent"><Home className="w-4 h-4" /><span className="hidden sm:inline">Início</span></button>

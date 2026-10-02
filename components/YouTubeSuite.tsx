@@ -10,7 +10,7 @@ import { SectionHelp } from './SectionHelp';
 import { OutputKindBadge } from './ToolLayout';
 import { EngineLink } from './ToolLayout';
 import { useAIGenerator } from '../hooks/useAIGenerator';
-import { splitVisualResult, stripVisualPrompt, splitOptions } from '../utils/stripCopyFormat';
+import { splitVisualResult, stripVisualPrompt, splitOptions, splitNotaBlock } from '../utils/stripCopyFormat';
 
 interface YouTubeSuiteProps {
   language: string;
@@ -86,9 +86,7 @@ Esta é a central tática para criadores que buscam autoridade e monetização. 
                 return newOutputs;
             });
         } else {
-            const parts = text.split("|||NOTA_DIVIDER|||");
-            const mainContent = parts[0]?.trim() || '';
-            const noteContent = parts[1] ? parts[1].replace(/NOTA DO ESTRATEGISTA:[\s]*/i, '').trim() : '';
+            const { content: mainContent, note: noteContent } = splitNotaBlock(text);
             setOutputs(prev => {
                 const newOutputs = { ...prev };
                 newOutputs[activeMode] = { text: mainContent, note: noteContent };
@@ -110,7 +108,7 @@ Esta é a central tática para criadores que buscam autoridade e monetização. 
                 <Youtube className="w-8 h-8 text-red-600" />
                 <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Domínio do YouTube</h2>
                 <OutputKindBadge kind={activeMode === 'thumbnail' ? 'image' : 'text'} />
-                <SectionHelp title="Domínio do YouTube" description={youtubeHelpDescription} />
+                <SectionHelp title="Domínio do YouTube" description={youtubeHelpDescription} sessionId="youtube" />
             </div>
             <div className="flex items-center gap-3">
                 <button onClick={() => setAppActiveTab('home')} className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-slate-900/50 border border-slate-800 transition-all"><Home className="w-3 h-3" /> Início</button>

@@ -4,7 +4,7 @@
     {
       "id": "9router",
       "envKey": "LITELLM_API_KEY_9ROUTER",
-      "masked": "sk-3***************************8f35",
+      "masked": "sk-3**********",
       "has": true,
       "label": "OK",
       "note": "autenticada",
@@ -15,7 +15,7 @@
     {
       "id": "openrouter",
       "envKey": "LITELLM_API_KEY_OPENROUTER",
-      "masked": "sk-o*****************************************************************fef3",
+      "masked": "sk-o**********",
       "has": true,
       "label": "OK",
       "note": "autenticada",
@@ -26,7 +26,7 @@
     {
       "id": "nvidia",
       "envKey": "NVIDIA_API",
-      "masked": "nvap**************************************************************0BTr",
+      "masked": "nvap**********",
       "has": true,
       "label": "OK",
       "note": "autenticada",
@@ -37,7 +37,7 @@
     {
       "id": "mistral",
       "envKey": "MISTRAL_API",
-      "masked": "mstr*************************************7ldC",
+      "masked": "mstr**********",
       "has": true,
       "label": "OK",
       "note": "autenticada",
@@ -48,7 +48,7 @@
     {
       "id": "groq",
       "envKey": "GROQ_API",
-      "masked": "gsk_************************************************Z4v5",
+      "masked": "gsk_**********",
       "has": true,
       "label": "OK",
       "note": "autenticada",
@@ -59,7 +59,7 @@
     {
       "id": "groq(meta)",
       "envKey": "META_API_KEY",
-      "masked": "gsk_************************************************8o6c",
+      "masked": "gsk_**********",
       "has": true,
       "label": "OK",
       "note": "autenticada",
@@ -70,7 +70,7 @@
     {
       "id": "deepseek",
       "envKey": "DEEPSEEK_API_KEY",
-      "masked": "sk-4***************************2c64",
+      "masked": "sk-4**********",
       "has": true,
       "label": "OK",
       "note": "autenticada",
@@ -81,7 +81,7 @@
     {
       "id": "cohere",
       "envKey": "COHERE_API_KEY",
-      "masked": "cohe*********************************************34B6",
+      "masked": "cohe**********",
       "has": true,
       "label": "OK",
       "note": "autenticada",
@@ -92,7 +92,7 @@
     {
       "id": "polinai",
       "envKey": "POLINAI_API",
-      "masked": "sk_w***************************fDrQ",
+      "masked": "sk_w**********",
       "has": true,
       "label": "FALHA 404",
       "note": "\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">",

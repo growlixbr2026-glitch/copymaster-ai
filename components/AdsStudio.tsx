@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Megaphone, Wand2, Link2, TrendingUp, Target, MousePointerClick, RefreshCw, Brain } from 'lucide-react';
 import { getLocalizedLists } from '../constants';
+import { CREWAI_MARKETING_PERSONAS } from '../data/crewai-personas';
 import { generateAdsService } from '../services/geminiService';
 import { useTranslation } from '../hooks/useTranslation';
 import { SectionHelp } from './SectionHelp';
@@ -36,6 +37,10 @@ const AdsStudio: React.FC<AdsStudioProps> = ({ language }) => {
     targetAudience: ''
   });
 
+  // CrewAI: persona especialista (prompts.chat)
+  const [crewPersona, setCrewPersona] = useState('');
+  const adsPersonas = CREWAI_MARKETING_PERSONAS.filter(p => p.bestFor.includes('ads'));
+
   const adsHelpDescription = `
 O que é o Gestor de Tráfego & Ads AI:
 Este módulo é especializado em criar anúncios que interrompem o "scroll" e geram cliques.
@@ -61,7 +66,7 @@ Este módulo é especializado em criar anúncios que interrompem o "scroll" e ge
     setAds([]); setGlobalNote(''); setActiveTab(0);
     
     generateStream(
-        (onChunk) => generateAdsService({ ...params, context: localContext, language: language }, onChunk),
+        (onChunk) => generateAdsService({ ...params, context: localContext, language, crewPersona: crewPersona || undefined }, onChunk),
         (streamedText) => {
             const noteSeparator = "|||NOTA_DIVIDER|||";
             const mainParts = streamedText.split(noteSeparator);
@@ -98,6 +103,15 @@ Este módulo é especializado em criar anúncios que interrompem o "scroll" e ge
         <select aria-label={t('ads_platform')} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" value={params.platform} onChange={(e) => setParams({...params, platform: e.target.value})} disabled={loading || isLocked}>{adPlatforms.map(p => ( <option key={p} value={p}>{p}</option> ))}</select>
       </div>
       <div><label className="text-sm font-medium text-slate-300 block mb-1">{t('ads_goal')}</label><select aria-label={t('ads_goal')} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" value={params.goal} onChange={(e) => setParams({...params, goal: e.target.value})} disabled={loading || isLocked}>{adGoals.map(g => ( <option key={g} value={g}>{g}</option> ))}</select></div>
+      <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2">
+        <label className="text-sm font-medium text-slate-300 flex items-center gap-1">
+          <Brain className="w-3.5 h-3.5 text-purple-400" /> Persona CrewAI
+        </label>
+        <select aria-label="Persona CrewAI" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-purple-500 outline-none" value={crewPersona} onChange={(e) => setCrewPersona(e.target.value)} disabled={loading || isLocked}>
+          <option value="">✨ Sem persona (padrão)</option>
+          {adsPersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}
+        </select>
+      </div>
       <div className="grid grid-cols-1 gap-3 bg-slate-900 p-4 rounded-lg border border-slate-800">
           <div><label className="text-xs text-slate-400 block mb-1 uppercase font-bold">{t('ads_product')}</label><input aria-label={t('ads_product')} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-emerald-500 outline-none" value={params.productName} onChange={(e) => setParams({...params, productName: e.target.value})} disabled={loading || isLocked} /></div>
           <div><label className="text-xs text-slate-400 block mb-1 uppercase font-bold flex items-center gap-1"><MousePointerClick className="w-3 h-3 text-emerald-400"/> {t('ads_offer')}</label><input aria-label="Ex: 50% OFF..." className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-emerald-500 outline-none" placeholder="Ex: 50% OFF..." value={params.offer} onChange={(e) => setParams({...params, offer: e.target.value})} disabled={loading || isLocked} /></div>
@@ -166,6 +180,7 @@ Este módulo é especializado em criar anúncios que interrompem o "scroll" e ge
       actions={actions}
       mainContent={mainContent}
       hasResults={ads.length > 0}
+      sessionId="ads"
     />
   );
 };

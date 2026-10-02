@@ -10,7 +10,7 @@ import { SectionHelp } from './SectionHelp';
 import { useAIGenerator } from '../hooks/useAIGenerator';
 import { OutputKindBadge } from './ToolLayout';
 import { EngineLink } from './ToolLayout';
-import { splitVisualResult } from '../utils/stripCopyFormat';
+import { splitVisualResult, splitNotaBlock } from '../utils/stripCopyFormat';
 
 interface ReelsSuiteProps {
   language: string;
@@ -97,7 +97,7 @@ Diferente do TikTok, o Instagram prioriza a estética e a construção de comuni
         if (!text || typeof text !== 'string') return;
         const parsed = activeMode === 'cover'
             ? splitVisualResult(text)
-            : { content: text.split("|||NOTA_DIVIDER|||")[0]?.trim() || '', note: text.split("|||NOTA_DIVIDER|||")[1] ? text.split("|||NOTA_DIVIDER|||")[1].replace(/NOTA DO ESTRATEGISTA:[\s]*/i, '').trim() : '' };
+            : splitNotaBlock(text);
         const parts = [parsed.content, parsed.note];
         setOutputs(prev => ({
             ...prev,
@@ -118,7 +118,7 @@ Diferente do TikTok, o Instagram prioriza a estética e a construção de comuni
                 <Instagram className="w-8 h-8 text-pink-500" />
                 <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Reels de Crescimento</h2>
                 <OutputKindBadge kind={activeMode === 'cover' ? 'image' : 'text'} />
-                <SectionHelp title="Reels de Crescimento" description={reelsHelpDescription} />
+                <SectionHelp title="Reels de Crescimento" description={reelsHelpDescription} sessionId="reels" />
             </div>
             <div className="flex items-center gap-3">
                 <button onClick={() => setAppActiveTab('home')} className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-slate-900/50 border border-slate-800 transition-all"><Home className="w-3 h-3" /> Início</button>

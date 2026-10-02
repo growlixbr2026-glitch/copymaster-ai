@@ -5,7 +5,7 @@ import {
     ChevronRight, Search, Lock, Unlock, ClipboardCheck, BarChart3, Target, Info,
     LayoutGrid, ListChecks, FileWarning, SearchCode, Database, Share2, Palette
 } from 'lucide-react';
-import { runStressTestService, StressTestResult, AuditCriterion } from '../services/modules/tools/diagnostic';
+import { runStressTestService, AUDIT_MODULE_IDS, AUDIT_CATEGORIES, StressTestResult, AuditCriterion } from '../services/modules/tools/diagnostic';
 import { useSharedContext } from '../contexts/SharedContext';
 import { SectionHelp } from './SectionHelp';
 
@@ -18,13 +18,8 @@ export default function StressDiagnostic({ language }: { language: string }) {
     const [repairing, setRepairing] = useState(false);
     const [auditMode, setAuditMode] = useState<'rapida' | 'completa'>('rapida');
 
-    const modules = [
-        'ideas', 'copy', 'notebook', 'personas', 'prd', // Estratégia
-        'email', 'vsl', 'lp', 'ads', 'sexy', // Vendas
-        'tiktok', 'reels', 'youtube', // Social
-        'carousel', 'logo', 'magazine', 'quote', 'citation', 'lettering', 'comic', 'meme', 'infographic', // Visual
-        'article', 'ppt' // Geral
-    ];
+    // Lista viva do diagnostic.ts — nunca hardcoded (senão módulos novos ficam fora da varredura).
+    const modules = AUDIT_MODULE_IDS;
 
     const runFullAudit = async () => {
         setIsRunning(true);
@@ -61,7 +56,7 @@ export default function StressDiagnostic({ language }: { language: string }) {
         setCurrentModuleId(null);
     };
 
-    const categories = ['Estratégia', 'Vendas', 'Social', 'Design', 'Geral'];
+    const categories = AUDIT_CATEGORIES;
 
     return (
         <div className="max-w-7xl mx-auto p-4 animate-in fade-in duration-500 pb-40">
@@ -69,11 +64,11 @@ export default function StressDiagnostic({ language }: { language: string }) {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                 <div>
                     <h2 className="text-4xl font-black text-white flex items-center gap-3 tracking-tighter">
-                        <Stethoscope className="w-12 h-12 text-emerald-400" /> AUDITORIA V24 
+                        <Stethoscope className="w-12 h-12 text-emerald-400" /> AUDITORIA V{AUDIT_MODULE_IDS.length}
                         <span className="bg-emerald-500/10 text-emerald-500 text-[10px] px-3 py-1 rounded-full border border-emerald-500/20 font-black uppercase tracking-widest ml-4">Full Scan Mode</span>
                     </h2>
                     <p className="text-slate-400 text-[11px] uppercase tracking-[0.4em] font-black mt-3 flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-emerald-500" /> Monitoramento em Tempo Real de 24 Módulos
+                        <ShieldCheck className="w-4 h-4 text-emerald-500" /> Monitoramento em Tempo Real de {AUDIT_MODULE_IDS.length} Módulos
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -89,18 +84,18 @@ export default function StressDiagnostic({ language }: { language: string }) {
                         <button
                             onClick={() => setAuditMode('rapida')}
                             disabled={isRunning || repairing}
-                            title="24 chamadas: testa cada serviço real com asserts determinísticos"
+                            title={`${AUDIT_MODULE_IDS.length} chamadas: testa cada serviço real com asserts determinísticos`}
                             className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${auditMode === 'rapida' ? 'bg-emerald-600 text-slate-950' : 'text-slate-400 hover:text-white'}`}
                         >
-                            Rápida (24 calls)
+                            Rápida ({AUDIT_MODULE_IDS.length} calls)
                         </button>
                         <button
                             onClick={() => setAuditMode('completa')}
                             disabled={isRunning || repairing}
-                            title="48 chamadas: rápida + juiz LLM por módulo"
+                            title={`${AUDIT_MODULE_IDS.length * 2} chamadas: rápida + juiz LLM por módulo`}
                             className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${auditMode === 'completa' ? 'bg-emerald-600 text-slate-950' : 'text-slate-400 hover:text-white'}`}
                         >
-                            Completa (48 calls)
+                            Completa ({AUDIT_MODULE_IDS.length * 2} calls)
                         </button>
                     </div>
                     <button onClick={() => setActiveTab('home')} title="Voltar para o Início" aria-label="Voltar para o Início" className="p-4 bg-slate-900 hover:bg-slate-800 rounded-2xl text-slate-400 border border-slate-800 shadow-lg"><Home className="w-6 h-6"/></button>

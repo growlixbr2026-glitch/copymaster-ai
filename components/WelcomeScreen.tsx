@@ -4,7 +4,7 @@ import {
   Megaphone, Flame, Video, Instagram, Youtube, Palette, Sparkles, 
   Target, Rocket, CheckCircle2, TrendingUp, Zap, HelpCircle, Info, 
   ArrowRight, ShieldCheck, Globe, Star, GalleryHorizontal, BookOpen, 
-  PieChart, Quote, Newspaper, MonitorPlay, ImagePlus, Type, Tv, Smile, ChevronDown, Lock, Brain, Trophy, Fingerprint, Crown, Mic2, MessageSquare, Briefcase, Share2, Stethoscope
+  PieChart, Quote, Newspaper, MonitorPlay, ImagePlus, Type, Tv, Smile, ChevronDown, Lock, Brain, Trophy, Fingerprint, Crown, Mic2, MessageSquare, Briefcase, Share2, Stethoscope, Swords, Send, Magnet, TrendingDown, Map, RefreshCw, HeartHandshake, BarChart2, DollarSign, FileText, UserMinus, Wrench
 } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -72,6 +72,49 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNavigate, language }) =
         { id: 'infographic', icon: PieChart, label: "Dados Visuais", desc: "Transforme informações complexas em infográficos fáceis de digerir." },
         { id: 'ppt', icon: MonitorPlay, label: "Apresentações", desc: "Roteirização de Pitch Decks para investidores e treinamentos corporativos." },
         { id: 'adultAnimation', icon: Tv, label: "Animação Adulta", desc: "Scripts ácidos e sarcásticos para vídeos de alto engajamento." },
+      ]
+    },
+    {
+      title: "Marketing Avançado",
+      subtitle: "Ferramentas profissionais para SEO, AEO, GEO e vendas B2B.",
+      color: "from-cyan-500/20 to-blue-500/20", border: "border-cyan-500/30", iconColor: "text-cyan-400",
+      tools: [
+        { id: 'seoAudit', icon: Stethoscope, label: "SEO/AEO/GEO Audit", desc: "Auditoria completa em 3 camadas: SEO tradicional, Answer Engine e Generative Engine Optimization." },
+        { id: 'keywords', icon: TrendingUp, label: "Keyword Discovery", desc: "Descubra e priorize palavras-chave com volume, dificuldade e intenção de busca." },
+        { id: 'contentBrief', icon: BookOpen, label: "Content Brief", desc: "Briefings completos de conteúdo com estrutura H1-H3, schema e critérios de aceitação." },
+        { id: 'competitor', icon: Swords, label: "Competitor Analysis", desc: "Análise competitiva com matriz de comparação, SWOT e posicionamento." },
+        { id: 'outreach', icon: Send, label: "Sales Outreach", desc: "Sequências de outreach personalizadas para e-mail, LinkedIn e telefone." },
+      ]
+    },
+    {
+      title: "Growth & MVP",
+      subtitle: "Valide seu negócio, lance produtos e escale com loops de crescimento.",
+      color: "from-blue-500/20 to-indigo-500/20", border: "border-blue-500/30", iconColor: "text-blue-400",
+      tools: [
+        { id: 'leadMagnet', icon: Magnet, label: "Lead Magnet Builder", desc: "Estruture iscas digitais com copy de landing e follow-up." },
+        { id: 'launch', icon: Rocket, label: "Launch Plan", desc: "Timeline de lançamento em 3 fases com checklist e métricas." },
+        { id: 'churn', icon: TrendingDown, label: "Churn Prevention", desc: "Playbook de retenção com ações preventivas e offers de save." },
+        { id: 'pmf', icon: Map, label: "PMF Canvas", desc: "Validação de PMF com sinais Sean Ellis e experimentos." },
+        { id: 'flywheel', icon: RefreshCw, label: "Growth Flywheel", desc: "Design de flywheel com loops de aquisição, ativação e retenção." },
+        { id: 'partnerships', icon: HeartHandshake, label: "Partnerships", desc: "Shortlist de parceiros e proposta de valor." },
+        { id: 'channelEconomics', icon: PieChart, label: "Channel Economics", desc: "Unit economics por canal: LTV/CAC, payback e priorização." },
+      ]
+    },
+    {
+      title: "RevOps & B2B Sales",
+      subtitle: "Operações de receita, habilitação de vendas e qualificação de deals.",
+      color: "from-emerald-500/20 to-teal-500/20", border: "border-emerald-500/30", iconColor: "text-emerald-400",
+      tools: [
+        { id: 'revops', icon: BarChart2, label: "RevOps Brief", desc: "Métricas, automações e higiene de CRM/pipeline." },
+        { id: 'pricing', icon: DollarSign, label: "Pricing Strategy", desc: "Estratégia de precificação em 3 tiers com âncora." },
+        { id: 'coldEmail', icon: Mail, label: "Cold Email B2B", desc: "Cadências de cold email com assuntos e CTAs." },
+        { id: 'battleCard', icon: Swords, label: "Battle Card", desc: "Matriz competitiva, SWOT e posicionamento." },
+        { id: 'enablement', icon: FileText, label: "Sales Enablement", desc: "One-pager, talk track e objeções." },
+        { id: 'dealDesk', icon: Target, label: "Deal Desk", desc: "Qualificação BANT/MEDDIC com go/no-go." },
+        { id: 'aePrep', icon: Briefcase, label: "AE Prep", desc: "Brief de conta e mapa de stakeholders." },
+        { id: 'salesEngineer', icon: Wrench, label: "Sales Engineer", desc: "Discovery técnico, RFP e plano de POC." },
+        { id: 'customerSuccess', icon: UserMinus, label: "Customer Success", desc: "Health score, risco de churn e expansão." },
+        { id: 'salesOps', icon: Users, label: "Sales Operations", desc: "Capacity planning e territórios." },
       ]
     },
     {

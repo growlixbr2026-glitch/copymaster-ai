@@ -22,6 +22,28 @@ import { generateMemeService } from '../social/meme';
 import { generateInfographicService, generatePresentationService } from '../creative/presentation';
 import { generateArticleService } from '../copy/article';
 import { generatePRDService } from '../copy/prd';
+import { generateRevOpsService } from '../revops/revenueOps';
+import { generatePricingService } from '../revops/pricing';
+import { generateSalesOpsService } from '../revops/salesOps';
+import { generateCustomerSuccessService } from '../revops/customerSuccess';
+import { generateChannelEconomicsService } from '../revops/channelEconomics';
+import { generateColdEmailService } from '../sales/coldEmail';
+import { generateBattleCardService } from '../sales/battleCard';
+import { generateEnablementService } from '../sales/enablement';
+import { generateDealDeskService } from '../sales/dealDesk';
+import { generateAEPrepService } from '../sales/aePrep';
+import { generateSalesEngineerService } from '../sales/salesEngineer';
+import { generateLeadMagnetService } from '../growth/leadMagnet';
+import { generateLaunchPlanService } from '../growth/launch';
+import { generateChurnService } from '../growth/churn';
+import { generatePMFService } from '../growth/pmf';
+import { generateFlywheelService } from '../growth/flywheel';
+import { generatePartnershipsService } from '../growth/partnerships';
+import { generateSEOAuditService } from '../strategy/seoAudit';
+import { generateKeywordService } from '../strategy/keywords';
+import { generateContentBriefService } from '../strategy/contentBrief';
+import { generateCompetitorService } from '../strategy/competitor';
+import { generateOutreachService } from '../copy/outreach';
 
 export interface AuditCriterion {
     id: string;
@@ -415,6 +437,218 @@ const MODULES: Record<string, ModuleDef> = {
         },
         checks: [sharedMarker(MARK, 25, 'negócio'), sharedDivider(['|||PRD_DIVIDER|||'], 20), containsAll(['tokens'], 15, 'TOKENS JSON'), sharedHasContent(100, 15), sharedNoNoteLeak(15), checkLen(200, 20, 'PRD COMPLETO'), sharedNoGreeting(15)],
     },
+    revops: {
+        label: 'RevOps Brief', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'Briefing de revenue operations com métricas, automações e higiene.',
+        run: async (language) => {
+            const r = await generateRevOpsService({ funnel: `Funil de ${MARK}`, revenue: `R$ 100k ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'funil'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    pricing: {
+        label: 'Pricing Strategy', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'Estratégia de precificação em 3 tiers com âncora e justificativa.',
+        run: async (language) => {
+            const r = await generatePricingService({ product: `Produto ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'produto'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    coldEmail: {
+        label: 'Cold Email B2B', category: 'RevOps & B2B Sales',
+        expectedPurpose: '3 cadências de cold email com EMAIL_DIVIDER.',
+        run: async (language) => {
+            const r = await generateColdEmailService({ icp: `ICP ${MARK}`, offer: `Oferta ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'ICP'), sharedDivider(['|||EMAIL_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    battleCard: {
+        label: 'Battle Card', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'Matriz competitiva com SWOT e posicionamento.',
+        run: async (language) => {
+            const r = await generateBattleCardService({ product: `Produto ${MARK}`, competitors: `Concorrentes ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'produto'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    enablement: {
+        label: 'Sales Enablement', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'One-pager, talk track e objeções.',
+        run: async (language) => {
+            const r = await generateEnablementService({ product: `Produto ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'produto'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    dealDesk: {
+        label: 'Deal Desk', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'Qualificação BANT/MEDDIC com go/no-go.',
+        run: async (language) => {
+            const r = await generateDealDeskService({ lead: `Lead ${MARK}`, budget: '50k', language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'lead'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    aePrep: {
+        label: 'AE Prep', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'Brief de conta e mapa de stakeholders.',
+        run: async (language) => {
+            const r = await generateAEPrepService({ account: `Conta ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'conta'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    salesEngineer: {
+        label: 'Sales Engineer', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'Discovery técnico, RFP e POC.',
+        run: async (language) => {
+            const r = await generateSalesEngineerService({ opportunity: `Opp ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'opp'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    customerSuccess: {
+        label: 'Customer Success', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'Health score, risco de churn e expansão.',
+        run: async (language) => {
+            const r = await generateCustomerSuccessService({ base: `Base ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'base'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    salesOps: {
+        label: 'Sales Operations', category: 'RevOps & B2B Sales',
+        expectedPurpose: 'Capacity planning e territórios.',
+        run: async (language) => {
+            const r = await generateSalesOpsService({ team: `Time ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'time'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    leadMagnet: {
+        label: 'Lead Magnet Builder', category: 'Growth & MVP',
+        expectedPurpose: 'Estrutura, copy de landing e follow-up.',
+        run: async (language) => {
+            const r = await generateLeadMagnetService({ niche: `Nicho ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'nicho'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    launch: {
+        label: 'Launch Plan', category: 'Growth & MVP',
+        expectedPurpose: 'Timeline em 3 fases com LAUNCH_DIVIDER.',
+        run: async (language) => {
+            const r = await generateLaunchPlanService({ product: `Produto ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'produto'), sharedDivider(['|||LAUNCH_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    churn: {
+        label: 'Churn Prevention', category: 'Growth & MVP',
+        expectedPurpose: 'Playbook de retenção com ações preventivas.',
+        run: async (language) => {
+            const r = await generateChurnService({ segment: `Segmento ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'segmento'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    pmf: {
+        label: 'PMF Canvas', category: 'Growth & MVP',
+        expectedPurpose: 'Validação de PMF com Sean Ellis e experimentos.',
+        run: async (language) => {
+            const r = await generatePMFService({ product: `Produto ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'produto'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    flywheel: {
+        label: 'Growth Flywheel', category: 'Growth & MVP',
+        expectedPurpose: 'Growth flywheel em JSON com nota isolada.',
+        run: async (language) => {
+            const r = await generateFlywheelService({ niche: `Nicho ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'nicho'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(50, 20), sharedNoGreeting(15), checkLen(40, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    partnerships: {
+        label: 'Partnerships', category: 'Growth & MVP',
+        expectedPurpose: 'Shortlist de parceiros e proposta de valor.',
+        run: async (language) => {
+            const r = await generatePartnershipsService({ product: `Produto ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'produto'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    channelEconomics: {
+        label: 'Channel Economics', category: 'Growth & MVP',
+        expectedPurpose: 'Unit economics por canal: LTV/CAC e payback.',
+        run: async (language) => {
+            const r = await generateChannelEconomicsService({ channels: `Canais ${MARK}`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'canais'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    seoAudit: {
+        label: 'SEO/AEO/GEO Audit', category: 'Estratégia',
+        expectedPurpose: 'Auditoria SEO/AEO/GEO do site em texto puro com checklists e Nota do Estrategista isolada.',
+        run: async (language) => {
+            const r = await generateSEOAuditService({ siteUrl: `https://cafe-${MARK.toLowerCase()}.com.br`, notes: `Focar no produto Café ${MARK} para baristas.`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'site/produto'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    keywords: {
+        label: 'Keyword Discovery', category: 'Estratégia',
+        expectedPurpose: 'JSON de keywords (seeds, opportunities, clusters) + Nota do Estrategista isolada.',
+        run: async (language) => {
+            const r = await generateKeywordService({ niche: `café especial ${MARK}`, location: 'Brasil', quantity: 10, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [
+            { id: 'json_valid', label: 'JSON VÁLIDO', impact: 15, run: ({ raw }: { raw: string }) => { try { JSON.parse(raw.split('|||NOTA_DIVIDER|||')[0]); return { passed: true, details: 'JSON parseável após cortar a Nota.' }; } catch { return { passed: false, details: 'JSON inválido ou vazio.' }; } } },
+            sharedMarker('café', 20, 'nicho'),
+            sharedDivider(['|||NOTA_DIVIDER|||'], 20),
+            sharedHasContent(80, 20),
+            sharedNoGreeting(15),
+            sharedNoNoteLeak(10),
+        ],
+    },
+    contentBrief: {
+        label: 'Search Content Brief', category: 'Estratégia',
+        expectedPurpose: 'Briefing de conteúdo SEO com estrutura H1-H3, perguntas a responder e Nota isolada.',
+        run: async (language) => {
+            const r = await generateContentBriefService({ primaryKeyword: `café ${MARK}`, topic: `Café ${MARK} para baristas`, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'keyword primária'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    competitor: {
+        label: 'Competitor Alternatives', category: 'Estratégia',
+        expectedPurpose: 'Matriz de comparação com concorrentes, gaps e posicionamento + Nota isolada.',
+        run: async (language) => {
+            const r = await generateCompetitorService({ productName: `Café ${MARK}`, productBrief: `Café especial em grãos para baristas (${MARK}).`, competitors: 'Nespresso, Starbucks At-Home', language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [sharedMarker(MARK, 20, 'produto'), sharedDivider(['|||NOTA_DIVIDER|||'], 20), sharedHasContent(80, 20), sharedNoGreeting(15), checkLen(100, 15, 'CORPO'), sharedNoNoteLeak(10)],
+    },
+    outreach: {
+        label: 'Sales Outreach', category: 'Vendas',
+        expectedPurpose: 'Sequência de mensagens de outreach separadas por EMAIL_DIVIDER + Nota do Estrategista isolada.',
+        run: async (language) => {
+            const r = await generateOutreachService({ valueProposition: `Vender o Café ${MARK} para baristas especializados.`, channel: 'email', sequenceLength: 3, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [
+            sharedMarker(MARK, 20, 'proposta'),
+            { id: 'dual_dividers', label: 'DIVISORES EXATOS (EMAIL+NOTA)', impact: 20, run: ({ raw }: { raw: string }) => { const ok = raw.includes('|||EMAIL_DIVIDER|||') && raw.includes('|||NOTA_DIVIDER|||'); return { passed: ok, details: ok ? 'EMAIL_DIVIDER e NOTA_DIVIDER presentes e exatos.' : 'Falta EMAIL_DIVIDER ou NOTA_DIVIDER.' }; } },
+            sharedHasContent(80, 20),
+            sharedNoGreeting(15),
+            checkLen(100, 15, 'CORPO'),
+            sharedNoNoteLeak(10),
+        ],
+    },
 };
 
 async function runJudge(output: string, expectedPurpose: string): Promise<{ adherenceScore: number; reasoning: string }> {
@@ -436,6 +670,9 @@ async function runJudge(output: string, expectedPurpose: string): Promise<{ adhe
 }
 
 export const AUDIT_MODULE_IDS = Object.keys(MODULES);
+
+/** Categorias na ordem de primeira aparição em MODULES — alimenta o dashboard da Auditoria. */
+export const AUDIT_CATEGORIES = [...new Set(AUDIT_MODULE_IDS.map((k) => MODULES[k].category))];
 
 export const runStressTestService = async (moduleId: string, language: string, mode: AuditMode = 'rapida'): Promise<StressTestResult> => {
     const def = MODULES[moduleId] || MODULES['copy'];

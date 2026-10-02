@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Layers, Copy, RefreshCw, BrainCircuit, ImagePlus, FileSearch, Wand2, Zap, Home, Lock, Unlock, X, CheckCircle2, Eraser, Edit3, ShieldCheck, Brain } from 'lucide-react';
 import { getLocalizedLists } from '../constants';
+import { CREWAI_MARKETING_PERSONAS } from '../data/crewai-personas';
 import { generateCopyService, generateCorrectionService } from '../services/modules/copy/general'; 
 import { analyzeImageContextService, analyzePdfContextService } from '../services/modules/visual/analysis';
 import { getActivePersona, personaToContext } from '../services/personaService';
@@ -14,7 +15,7 @@ import { RefinementToolbar } from './RefinementToolbar';
 import { toFriendlyError } from '../services/friendlyErrors';
 import { SectionHelp } from './SectionHelp';
 import { OutputKindBadge } from './ToolLayout';
-import { stripCopyMarkdown, splitCopyVariants } from '../utils/stripCopyFormat';
+import { stripCopyMarkdown, splitCopyVariants, splitNotaBlock } from '../utils/stripCopyFormat';
 
 const forceCleanText = (text: string) => stripCopyMarkdown(text);
 
@@ -31,6 +32,10 @@ export default function CopyGenerator({ language }: { language: string }) {
   const [analyzingFile, setAnalyzingFile] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [showNoteModal, setShowNoteModal] = useState(false);
+
+  // CrewAI: persona especialista (prompts.chat)
+  const [crewPersona, setCrewPersona] = useState('');
+  const copyPersonas = CREWAI_MARKETING_PERSONAS.filter(p => p.bestFor.includes('copy'));
   
   const [params, setParams] = useState({
     platform: socialPlatforms[0], 
@@ -125,8 +130,7 @@ Funcionalidades de Elite:
 
   const processResponse = (streamedText: string) => {
         if (!streamedText) return;
-        const noteParts = streamedText.split("|||NOTA_DIVIDER|||");
-        const globalNote = noteParts[1] ? noteParts[1].replace(/NOTA DO ESTRATEGISTA:[\s]*/i, '').trim() : '';
+        const globalNote = splitNotaBlock(streamedText).note;
         const copies = extractCopies(streamedText);
         if (copies.length === 0) copies.push('');
         setGeneratedCopies(copies.map(c => ({ copy: forceCleanText(c), note: globalNote })));
@@ -151,6 +155,7 @@ Funcionalidades de Elite:
         briefingContent: content,
         language,
         targetLength: Number(params.targetLength),
+        crewPersona: crewPersona || undefined,
       }, onChunk),
       processResponse,
       (finalText) => {
@@ -192,7 +197,7 @@ Funcionalidades de Elite:
             <h2 className="text-xl font-black flex items-center gap-2 text-indigo-400 uppercase tracking-tighter">
               <Layers className="w-6 h-6" /> {t('copy_title')}
               <OutputKindBadge kind="text" />
-              <SectionHelp title={t('copy_title')} description={copyHelpDescription} />
+              <SectionHelp title={t('copy_title')} description={copyHelpDescription} sessionId="copy" />
             </h2>
             <div className="flex items-center gap-2">
                 <button onClick={() => setAppActiveTab('home')} title="Voltar para o Início" aria-label="Voltar para o Início" className="p-2 hover:bg-slate-800 rounded-lg text-slate-500 transition-all"><Home className="w-4 h-4" /></button>
@@ -206,6 +211,16 @@ Funcionalidades de Elite:
                 <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Formato de Arma</label><select aria-label="Formato de Arma" className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white font-bold outline-none focus:border-indigo-500" value={params.type} onChange={e => setParams({...params, type: e.target.value as any})}>{postTypes.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
                 <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Fase do Ataque</label><select aria-label="Fase do Ataque" className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white font-bold outline-none focus:border-indigo-500" value={params.funnelStage} onChange={e => setParams({...params, funnelStage: e.target.value as any})}>{funnelStages.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
                 <div className="space-y-1"><label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Técnica Persuasiva</label><select aria-label="Técnica Persuasiva" className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white font-bold outline-none focus:border-indigo-500" value={params.methodology} onChange={e => setParams({...params, methodology: e.target.value})}>{methodologies.map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+              </div>
+
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-1.5 ml-1">
+                  <Brain className="w-3.5 h-3.5 text-purple-400" /> Persona CrewAI
+                </label>
+                <select aria-label="Persona CrewAI" className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs text-white font-bold outline-none focus:border-purple-500" value={crewPersona} onChange={e => setCrewPersona(e.target.value)} disabled={loading}>
+                  <option value="">✨ Sem persona (padrão)</option>
+                  {copyPersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}
+                </select>
               </div>
 
               <div>

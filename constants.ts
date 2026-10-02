@@ -6,6 +6,17 @@ import * as Visual from './data/visuals';
 import * as Creative from './data/creative';
 import * as Citation from './data/citations';
 
+// Guides system
+export {
+  SessionGuide,
+  GuideInputField,
+  GuideSubsession,
+  SESSION_GUIDES,
+  registerGuide,
+  getGuide,
+  getAllGuides,
+} from './data/guides';
+
 // TTS Platforms - explicit exports
 export {
     TTS_PLATFORMS,
@@ -21,6 +32,16 @@ export {
     type TTSChoice,
     type TTSPlatform,
 } from './data/tts';
+
+// CrewAI Marketing Personas (prompts.chat, CC0 1.0)
+export {
+    CREWAI_MARKETING_PERSONAS,
+    getCrewAIPersona,
+    getCrewAIPersonasForSession,
+    CREWAI_PERSONA_IDS,
+    CREWAI_PERSONA_LABELS,
+    type CrewAIPersona,
+} from './data/crewai-personas';
 
 // Re-exports diretos para compatibilidade
 export const { GLOBAL_LANGUAGES, IMAGE_AIS, VIDEO_AIS, VIBE_CODING_PLATFORMS, VIDEO_RATIOS } = Global;

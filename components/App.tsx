@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
-import { PenTool, Flame, ImagePlus, Youtube, Menu, X, Link2, GalleryHorizontal, BookOpen, PieChart, Quote, Newspaper, Settings, Wallet, Video, Instagram, Globe, MonitorPlay, Users, Mail, Play, LayoutTemplate, Megaphone, Type as TypeIcon, Notebook, Smile, Tv, Lightbulb, Sparkles, AlertTriangle, Palette, Moon, Sun, Paintbrush, Home, Stethoscope, FileText } from 'lucide-react';
+import { PenTool, Flame, ImagePlus, Youtube, Menu, X, Link2, GalleryHorizontal, BookOpen, PieChart, Quote, Newspaper, Settings, Wallet, Video, Instagram, Globe, MonitorPlay, Users, Mail, Play, LayoutTemplate, Megaphone, Type as TypeIcon, Notebook, Smile, Tv, Lightbulb, Sparkles, AlertTriangle, Palette, Moon, Sun, Paintbrush, Home, Stethoscope, FileText, TrendingUp, Swords, Send, BarChart2, DollarSign, Target, Briefcase, Wrench, UserMinus, Magnet, Rocket, TrendingDown, Map, RefreshCw, HeartHandshake } from 'lucide-react';
 import { GLOBAL_LANGUAGES } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import { SharedContextProvider, useSharedContext } from '../contexts/SharedContext';
@@ -41,6 +41,28 @@ const QuotaErrorModal = lazy(() => import('./QuotaErrorModal'));
 const StressDiagnostic = lazy(() => import('./StressDiagnostic'));
 const InspirationStudio = lazy(() => import('./InspirationStudio'));
 const PRDStudio = lazy(() => import('./PRDStudio'));
+const SEOAuditStudio = lazy(() => import('./SEOAuditStudio'));
+const KeywordStudio = lazy(() => import('./KeywordStudio'));
+const ContentBriefStudio = lazy(() => import('./ContentBriefStudio'));
+const CompetitorStudio = lazy(() => import('./CompetitorStudio'));
+const OutreachStudio = lazy(() => import('./OutreachStudio'));
+const RevOpsBriefStudio = lazy(() => import('./RevOpsBriefStudio'));
+const PricingStrategyStudio = lazy(() => import('./PricingStrategyStudio'));
+const ColdEmailStudio = lazy(() => import('./ColdEmailStudio'));
+const BattleCardStudio = lazy(() => import('./BattleCardStudio'));
+const EnablementStudio = lazy(() => import('./EnablementStudio'));
+const DealDeskStudio = lazy(() => import('./DealDeskStudio'));
+const AEPrepStudio = lazy(() => import('./AEPrepStudio'));
+const SalesEngineerStudio = lazy(() => import('./SalesEngineerStudio'));
+const CustomerSuccessStudio = lazy(() => import('./CustomerSuccessStudio'));
+const SalesOperationsStudio = lazy(() => import('./SalesOperationsStudio'));
+const LeadMagnetStudio = lazy(() => import('./LeadMagnetStudio'));
+const LaunchPlanStudio = lazy(() => import('./LaunchPlanStudio'));
+const ChurnPreventionStudio = lazy(() => import('./ChurnPreventionStudio'));
+const PMFCanvasStudio = lazy(() => import('./PMFCanvasStudio'));
+const GrowthFlywheelStudio = lazy(() => import('./GrowthFlywheelStudio'));
+const PartnershipsStudio = lazy(() => import('./PartnershipsStudio'));
+const ChannelEconomicsStudio = lazy(() => import('./ChannelEconomicsStudio'));
 
 
 // --- ENGINE OPTIMIZATION: External Component ---
@@ -236,6 +258,28 @@ const AppContent: React.FC = () => {
     'wallet': <TokenDashboard language={language} />,
     'inspiration': <InspirationStudio language={language} />,
     'prd': <PRDStudio language={language} />,
+    'seoAudit': <SEOAuditStudio language={language} />,
+    'keywords': <KeywordStudio language={language} />,
+    'contentBrief': <ContentBriefStudio language={language} />,
+    'competitor': <CompetitorStudio language={language} />,
+    'outreach': <OutreachStudio language={language} />,
+    'revops': <RevOpsBriefStudio language={language} />,
+    'pricing': <PricingStrategyStudio language={language} />,
+    'coldEmail': <ColdEmailStudio language={language} />,
+    'battleCard': <BattleCardStudio language={language} />,
+    'enablement': <EnablementStudio language={language} />,
+    'dealDesk': <DealDeskStudio language={language} />,
+    'aePrep': <AEPrepStudio language={language} />,
+    'salesEngineer': <SalesEngineerStudio language={language} />,
+    'customerSuccess': <CustomerSuccessStudio language={language} />,
+    'salesOps': <SalesOperationsStudio language={language} />,
+    'leadMagnet': <LeadMagnetStudio language={language} />,
+    'launch': <LaunchPlanStudio language={language} />,
+    'churn': <ChurnPreventionStudio language={language} />,
+    'pmf': <PMFCanvasStudio language={language} />,
+    'flywheel': <GrowthFlywheelStudio language={language} />,
+    'partnerships': <PartnershipsStudio language={language} />,
+    'channelEconomics': <ChannelEconomicsStudio language={language} />,
     'stress': <StressDiagnostic language={language} />
   }), [language]); 
   
@@ -363,6 +407,43 @@ const AppContent: React.FC = () => {
                     <NavItem id="ppt" label={t('nav_ppt')} icon={MonitorPlay} colorClass="text-orange-400" activeTab={activeTab} onClick={handleNavClick} />
                     <NavItem id="media" label={t('nav_media')} icon={ImagePlus} colorClass="text-pink-400" activeTab={activeTab} onClick={handleNavClick} />
                     <NavItem id="inspiration" label={t('insp_title')} icon={Sparkles} colorClass="text-yellow-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                </div>
+            </div>
+            <div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Marketing Avançado</div>
+                <div className="space-y-1">
+                    <NavItem id="seoAudit" label="SEO/AEO/GEO Audit" icon={Stethoscope} colorClass="text-cyan-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="keywords" label="Keyword Discovery" icon={TrendingUp} colorClass="text-emerald-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="contentBrief" label="Content Brief" icon={FileText} colorClass="text-blue-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="competitor" label="Competitor Analysis" icon={Swords} colorClass="text-red-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="outreach" label="Sales Outreach" icon={Send} colorClass="text-pink-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                </div>
+            </div>
+            <div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Growth & MVP</div>
+                <div className="space-y-1">
+                    <NavItem id="leadMagnet" label="Lead Magnet" icon={Magnet} colorClass="text-indigo-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="launch" label="Launch Plan" icon={Rocket} colorClass="text-rose-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="churn" label="Churn Prevention" icon={TrendingDown} colorClass="text-red-500" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="pmf" label="PMF Canvas" icon={Map} colorClass="text-emerald-500" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="flywheel" label="Growth Flywheel" icon={RefreshCw} colorClass="text-blue-500" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="partnerships" label="Partnerships" icon={HeartHandshake} colorClass="text-pink-500" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="channelEconomics" label="Channel Economics" icon={PieChart} colorClass="text-amber-500" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                </div>
+            </div>
+            <div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">RevOps & B2B Sales</div>
+                <div className="space-y-1">
+                    <NavItem id="revops" label="RevOps Brief" icon={BarChart2} colorClass="text-emerald-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="pricing" label="Pricing Strategy" icon={DollarSign} colorClass="text-amber-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="coldEmail" label="Cold Email B2B" icon={Mail} colorClass="text-sky-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="battleCard" label="Battle Card" icon={Swords} colorClass="text-red-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="enablement" label="Sales Enablement" icon={FileText} colorClass="text-violet-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="dealDesk" label="Deal Desk" icon={Target} colorClass="text-orange-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="aePrep" label="AE Prep" icon={Briefcase} colorClass="text-teal-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="salesEngineer" label="Sales Engineer" icon={Wrench} colorClass="text-cyan-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="customerSuccess" label="Customer Success" icon={UserMinus} colorClass="text-lime-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
+                    <NavItem id="salesOps" label="Sales Operations" icon={Users} colorClass="text-fuchsia-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
                 </div>
             </div>
             <div>

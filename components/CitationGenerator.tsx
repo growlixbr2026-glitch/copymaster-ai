@@ -297,7 +297,7 @@ Citações reais de grandes personalidades, versículos bíblicos e provérbios 
             <div className="h-full flex flex-col items-center justify-center text-slate-600 p-6">{(loading || verifying) ? <RefreshCw className="w-16 h-16 mb-4 animate-spin text-amber-500" /> : <Quote className="w-16 h-16 mb-4 opacity-20" />}<p className="text-center text-slate-400">{loading ? 'Buscando citações reais...' : verifying ? t('cit_verifying') : t('msg_wait_desc')}</p></div>
           )}
         </>
-      )} hasResults={citations.length > 0} />
+      )} hasResults={citations.length > 0} sessionId="citation" />
   );
 };
 

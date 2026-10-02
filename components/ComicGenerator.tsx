@@ -145,7 +145,7 @@ Este módulo transforma roteiros de texto em estruturas visuais cinematográfica
             <div className="h-full flex flex-col items-center justify-center text-slate-600 p-6">{loading ? <RefreshCw className="w-16 h-16 mb-4 animate-spin text-yellow-500" /> : <BookOpen className="w-16 h-16 mb-4 opacity-20" />}<p className="text-center text-slate-400">{loading ? 'Roteirizando HQ...' : t('msg_wait_desc')}</p></div>
         )}
       </>
-  )} hasResults={!!result.content} />
+  )} hasResults={!!result.content} sessionId="comic" />
   );
 };
 

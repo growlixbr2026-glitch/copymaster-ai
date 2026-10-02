@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutTemplate, Wand2, Link2, Monitor, MousePointerClick, Zap, Gift, Code2, Terminal, Palette, Layers, Cpu, AlertCircle, CheckCircle2, RefreshCw, Brain } from 'lucide-react';
 import { getLocalizedLists, VIBE_CODING_PLATFORMS } from '../constants';
+import { CREWAI_MARKETING_PERSONAS } from '../data/crewai-personas';
 import { generateLandingPageService, generateLandingPageTechPromptService } from '../services/geminiService';
+import { splitNotaBlock } from '../utils/stripCopyFormat';
+import { runCrewWorkflow } from '../services/modules/copy/crewaiWorkflowService';
 import { useTranslation } from '../hooks/useTranslation';
 import { SectionHelp } from './SectionHelp';
 import SpeechInput from './SpeechInput';
@@ -44,6 +47,11 @@ const LandingPageStudio: React.FC<LandingPageStudioProps> = ({ language }) => {
       interactivity: ''
   });
 
+  // CrewAI: persona especialista (prompts.chat) + pipeline sequencial
+  const [crewPersona, setCrewPersona] = useState('');
+  const [useCrewAI, setUseCrewAI] = useState(false);
+  const lpPersonas = CREWAI_MARKETING_PERSONAS.filter(p => p.bestFor.includes('landing'));
+
   const lpHelpDescription = `
 O que é o Estúdio de Landing Pages:
 Este é o arquiteto mestre da sua presença online. Ele opera em dois níveis: Estratégico (Copy) e Técnico (Vibe Coding).
@@ -73,12 +81,15 @@ Este é o arquiteto mestre da sua presença online. Ele opera em dois níveis: E
     
     if (mode === 'content') {
         const enrichedContext = `${localContext}\nSPECIFIC OFFER/LEAD MAGNET: ${params.offer}`;
+        const crewContext = { ...params, context: enrichedContext, language, crewPersona: crewPersona || '' };
         generateStream(
-            (onChunk) => generateLandingPageService({ ...params, context: enrichedContext, language: language }, onChunk),
+            (onChunk) => useCrewAI
+              // Pipeline CrewAI real: wireframe → copy (2 chamadas encadeadas)
+              ? runCrewWorkflow('landing', crewContext, onChunk)
+              : generateLandingPageService({ ...params, context: enrichedContext, language, crewPersona: crewPersona || undefined }, onChunk),
             (streamedText) => {
-                const parts = streamedText.split("|||NOTA_DIVIDER|||");
-                const note = parts[1] ? parts[1].replace(/NOTA DO (ESTRATEGISTA|ESPECIALISTA).*?:[\s]*/i, '').trim() : '';
-                setResult({ content: parts[0].trim(), note });
+                const { content, note } = splitNotaBlock(streamedText);
+                setResult({ content, note });
             }
         );
     } else {
@@ -143,6 +154,19 @@ Este é o arquiteto mestre da sua presença online. Ele opera em dois níveis: E
                   <div><label className="text-xs text-slate-400 block mb-1 uppercase font-bold">Oferta / Isca</label><input aria-label="Oferta" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-violet-500 outline-none" placeholder="Ex: ebook grátis + cupom" value={params.offer} onChange={(e) => setParams({...params, offer: e.target.value})} disabled={loading || isLocked} /></div>
                   <div><label className="text-xs text-slate-400 block mb-1 uppercase font-bold">Público-Alvo</label><input aria-label="Público-Alvo" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-violet-500 outline-none" placeholder="Ex: donos de petshop" value={params.targetAudience} onChange={(e) => setParams({...params, targetAudience: e.target.value})} disabled={loading || isLocked} /></div>
               </div>
+              <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2">
+                  <label className="text-sm font-medium text-slate-300 flex items-center gap-1">
+                      <Brain className="w-3.5 h-3.5 text-purple-400" /> Persona CrewAI
+                  </label>
+                  <select aria-label="Persona CrewAI" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-purple-500 outline-none" value={crewPersona} onChange={(e) => setCrewPersona(e.target.value)} disabled={loading || isLocked}>
+                      <option value="">✨ Sem persona (padrão)</option>
+                      {lpPersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}
+                  </select>
+                  <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                      <input type="checkbox" checked={useCrewAI} onChange={(e) => setUseCrewAI(e.target.checked)} disabled={loading || isLocked} className="accent-purple-500" />
+                      Modo CrewAI (wireframe → copy em 2 etapas)
+                  </label>
+              </div>
           </div>
       )}
     </>
@@ -203,6 +227,7 @@ Este é o arquiteto mestre da sua presença online. Ele opera em dois níveis: E
       actions={actions}
       mainContent={mainContent}
       hasResults={!!result.content}
+      sessionId="landing"
     />
   );
 };

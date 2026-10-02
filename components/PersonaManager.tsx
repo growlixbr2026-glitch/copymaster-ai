@@ -4,6 +4,7 @@ import { Persona } from '../types';
 import { getPersonas, savePersona, deletePersona, setActivePersonaId, getActivePersonaId, personaToContext } from '../services/personaService';
 import { generatePersonasService, generateImagePromptService } from '../services/geminiService';
 import { downloadPDF } from '../services/pdfService';
+import { splitNotaBlock } from '../utils/stripCopyFormat';
 import { useTranslation } from '../hooks/useTranslation';
 import { getLocalizedLists, IMAGE_AIS } from '../constants';
 import { SectionHelp } from './SectionHelp';
@@ -79,8 +80,7 @@ Este é o "Cérebro Estratégico" da sua aplicação. Uma persona não é apenas
       if (error) { 
         setPortraitError(toFriendlyError(error)); 
       } else if (fullResponse) {
-        const parts = fullResponse.split("|||NOTA_DIVIDER|||");
-        setPortraitPrompt(parts[0].trim());
+        setPortraitPrompt(splitNotaBlock(fullResponse).content);
       }
       setGeneratingPortrait(false);
   };
@@ -233,7 +233,7 @@ Este é o "Cérebro Estratégico" da sua aplicação. Uma persona não é apenas
         <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-900/50">
             <div>
                 <h2 className="text-2xl font-bold text-white flex items-center gap-3"><Users className="w-8 h-8 text-emerald-400" /> {t('persona_title')} <OutputKindBadge kind="text" /></h2>
-                <SectionHelp title={t('persona_title')} description={personaHelpDescription} />
+                <SectionHelp title={t('persona_title')} description={personaHelpDescription} sessionId="personas" />
             </div>
             <div className="flex gap-2">
                 <button 

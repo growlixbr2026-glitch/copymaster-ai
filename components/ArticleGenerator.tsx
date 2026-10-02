@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getLocalizedLists } from '../constants';
+import { CREWAI_MARKETING_PERSONAS } from '../data/crewai-personas';
 import { generateArticleService } from '../services/geminiService';
 import { Newspaper, Wand2, CheckCircle2, FileText, Link2, Book, Quote, UserCog, PenTool, Mic2, Briefcase, RefreshCw, Code, Home, Brain } from 'lucide-react';
 import { ArticleParams } from '../types';
@@ -47,6 +48,10 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ language }) => {
     writerStyle: 'Journalist'
   });
 
+  // CrewAI: persona especialista (prompts.chat)
+  const [crewPersona, setCrewPersona] = useState('');
+  const articlePersonas = CREWAI_MARKETING_PERSONAS.filter(p => p.bestFor.includes('article'));
+
   const articleHelpDescription = `
 O que é o Redator de Autoridade (SEO & AEO):
 Esta ferramenta gera artigos otimizados não apenas para o Google (SEO), mas para mecanismos de busca por IA (AEO).
@@ -61,7 +66,7 @@ Esta ferramenta gera artigos otimizados não apenas para o Google (SEO), mas par
     setResult({ content: '', note: '', schema: '' });
 
     generateStream(
-        (onChunk) => generateArticleService({ ...params, context: localTopic, language }, onChunk),
+        (onChunk) => generateArticleService({ ...params, context: localTopic, language, crewPersona: crewPersona || undefined }, onChunk),
         (streamedText) => {
             const noteSeparator = "|||NOTA_DIVIDER|||";
             const schemaSeparator = "|||SCHEMA_DIVIDER|||";
@@ -102,7 +107,16 @@ Esta ferramenta gera artigos otimizados não apenas para o Google (SEO), mas par
   return (
       <ToolLayout title={t('art_title')} icon={Newspaper} iconColorClass="text-blue-400" description={articleHelpDescription} loading={loading} error={error} isLocked={isLocked} onToggleLock={() => setIsLocked(!isLocked)} sidebarContent={( 
         <div className="space-y-4"> 
-          <div><label className="text-sm font-medium text-slate-300 block mb-1">Persona</label><select aria-label="Persona" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-blue-500 outline-none text-sm" value={params.writerStyle} onChange={(e) => setParams({...params, writerStyle: e.target.value})} disabled={isLocked}>{writerPersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}</select></div> 
+          <div><label className="text-sm font-medium text-slate-300 block mb-1">Persona</label><select aria-label="Persona" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-blue-500 outline-none text-sm" value={params.writerStyle} onChange={(e) => setParams({...params, writerStyle: e.target.value})} disabled={isLocked}>{writerPersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}</select></div>
+          <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2">
+            <label className="text-sm font-medium text-slate-300 flex items-center gap-1">
+              <Brain className="w-3.5 h-3.5 text-purple-400" /> Persona CrewAI
+            </label>
+            <select aria-label="Persona CrewAI" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-purple-500 outline-none" value={crewPersona} onChange={(e) => setCrewPersona(e.target.value)} disabled={loading || isLocked}>
+              <option value="">✨ Sem persona (padrão)</option>
+              {articlePersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}
+            </select>
+          </div> 
           <div><label className="text-sm font-medium text-slate-300 block mb-1">{t('art_type')}</label><select aria-label={t('art_type')} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-blue-500 outline-none text-sm" value={params.type} onChange={(e) => setParams({...params, type: e.target.value})} disabled={isLocked}>{articleTypes.map(t => (<option key={t} value={t}>{t}</option>))}</select></div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className="text-xs text-slate-400 block mb-1 uppercase font-bold">Tom</label><select aria-label="Tom do artigo" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-slate-200 focus:border-blue-500 outline-none" value={params.tone} onChange={(e) => setParams({...params, tone: e.target.value})} disabled={isLocked}>{(tones || []).map((x: string) => (<option key={x} value={x}>{x}</option>))}</select></div>
@@ -123,7 +137,7 @@ Esta ferramenta gera artigos otimizados não apenas para o Google (SEO), mas par
             <textarea aria-label="Tópico do artigo..." className="w-full h-32 bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:ring-1 focus:ring-blue-500 outline-none" value={localTopic} onChange={(e) => setLocalTopic(e.target.value)} placeholder="Tópico do artigo..." disabled={isLocked}></textarea>
           </div>
         </div> 
-      )} actions={( <button onClick={handleGenerate} disabled={loading || !localTopic || isLocked} className="w-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"> {loading ? <RefreshCw className="animate-spin w-5 h-5" /> : <Newspaper className="w-5 h-5" />} {loading ? 'Redigindo...' : t('art_btn')} </button> )} mainContent={mainContent} hasResults={!!result.content} outputKind="text" />
+      )} actions={( <button onClick={handleGenerate} disabled={loading || !localTopic || isLocked} className="w-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"> {loading ? <RefreshCw className="animate-spin w-5 h-5" /> : <Newspaper className="w-5 h-5" />} {loading ? 'Redigindo...' : t('art_btn')} </button> )} mainContent={mainContent} hasResults={!!result.content} outputKind="text" sessionId="article" />
   );
 };
 

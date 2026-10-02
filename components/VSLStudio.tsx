@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Video, Wand2, Link2, Play, ShieldCheck, Target, AlertTriangle, RefreshCw, Brain } from 'lucide-react';
 import { getLocalizedLists } from '../constants';
+import { CREWAI_MARKETING_PERSONAS } from '../data/crewai-personas';
 import { generateVSLService } from '../services/geminiService';
+import { runCrewWorkflow } from '../services/modules/copy/crewaiWorkflowService';
 import { useTranslation } from '../hooks/useTranslation';
 import { SectionHelp } from './SectionHelp';
 import SpeechInput from './SpeechInput';
@@ -10,6 +12,7 @@ import { RefinementToolbar } from './RefinementToolbar';
 import { useAIGenerator } from '../hooks/useAIGenerator';
 import { ToolLayout } from './ToolLayout';
 import { sanitizeTeleprompter } from '../utils/outputGuard';
+import { splitNotaBlock } from '../utils/stripCopyFormat';
 
 interface VSLStudioProps {
   language: string;
@@ -32,6 +35,11 @@ const VSLStudio: React.FC<VSLStudioProps> = ({ language }) => {
     uniqueMechanism: '', offer: '', guarantee: ''
   });
 
+  // CrewAI: persona especialista (prompts.chat) + modo estruturado
+  const [crewPersona, setCrewPersona] = useState('');
+  const [useCrewAI, setUseCrewAI] = useState(false);
+  const vslPersonas = CREWAI_MARKETING_PERSONAS.filter(p => p.bestFor.includes('vsl'));
+
   const vslHelpDescription = `
 O que é o Roteirista Profissional de VSL:
 O VSL (Video Sales Letter) é um dos ativos mais caros e poderosos do marketing digital.
@@ -46,15 +54,26 @@ O VSL (Video Sales Letter) é um dos ativos mais caros e poderosos do marketing 
   const handleGenerate = async () => {
     if (!localContext || !params.productName) { alert("Preencha o Nome do Produto e o Contexto."); return; }
     setResult({ content: '', note: '' });
+
+    const crewContext = {
+      ...params,
+      context: localContext,
+      language,
+      crewPersona: crewPersona || '',
+    };
+
     generateStream(
-        (onChunk) => generateVSLService({ ...params, context: localContext, language: language }, onChunk),
+        (onChunk) => useCrewAI
+          // Pipeline CrewAI real: pesquisa → estrutura → roteiro → revisão (4 chamadas)
+          ? runCrewWorkflow('vsl', crewContext, onChunk)
+          // Modo padrão: 1 chamada com persona opcional
+          : generateVSLService({ ...params, context: localContext, language, crewPersona: crewPersona || undefined }, onChunk),
         (streamedText) => {
-            const noteSeparator = "|||NOTA_DIVIDER|||";
-            const parts = streamedText.split(noteSeparator);
+            // Texto puro (tradicional) ou workflow CrewAI recomposto: a nota
+            // começa no ÚLTIMO |||NOTA_DIVIDER||| e todo o resto fica no script.
+            const { content, note } = splitNotaBlock(streamedText);
             // Sanitização de teleprompter: travessões viram pausa simples.
-            const content = sanitizeTeleprompter(parts[0]).trim();
-            const note = parts[1] ? parts[1].replace(/NOTA DO ESTRATEGISTA:[\s]*/i, '').trim() : '';
-            setResult({ content, note });
+            setResult({ content: sanitizeTeleprompter(content).trim(), note });
         }
     );
   };
@@ -66,6 +85,19 @@ O VSL (Video Sales Letter) é um dos ativos mais caros e poderosos do marketing 
       <div>
         <label className="text-sm font-medium text-slate-300 block mb-1">{t('vsl_framework')}</label>
         <select aria-label={t('vsl_framework')} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:ring-1 focus:ring-red-500 outline-none text-sm" value={params.framework} onChange={(e) => setParams({...params, framework: e.target.value})} disabled={loading || isLocked}>{vslFrameworks.map(f => (<option key={f} value={f}>{f}</option>))}</select>
+      </div>
+      <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2">
+        <label className="text-sm font-medium text-slate-300 flex items-center gap-1">
+          <Brain className="w-3.5 h-3.5 text-purple-400" /> Persona CrewAI
+        </label>
+        <select aria-label="Persona CrewAI" className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-purple-500 outline-none" value={crewPersona} onChange={(e) => setCrewPersona(e.target.value)} disabled={loading || isLocked}>
+          <option value="">✨ Sem persona (padrão)</option>
+          {vslPersonas.map(p => (<option key={p.id} value={p.id}>{p.label}</option>))}
+        </select>
+        <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+          <input type="checkbox" checked={useCrewAI} onChange={(e) => setUseCrewAI(e.target.checked)} disabled={loading || isLocked} className="accent-purple-500" />
+          Modo CrewAI (pipeline em etapas: pesquisa → estrutura → roteiro → revisão)
+        </label>
       </div>
       <div className="grid grid-cols-1 gap-3 bg-slate-900 p-4 rounded-lg border border-slate-800">
           <div><label className="text-xs text-slate-400 block mb-1 uppercase font-bold">{t('vsl_product')}</label><input aria-label={t('vsl_product')} className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-slate-200 focus:border-red-500 outline-none" value={params.productName} onChange={(e) => setParams({...params, productName: e.target.value})} disabled={loading || isLocked} /></div>
@@ -125,6 +157,7 @@ O VSL (Video Sales Letter) é um dos ativos mais caros e poderosos do marketing 
       actions={actions}
       mainContent={mainContent}
       hasResults={!!result.content}
+      sessionId="vsl"
     />
   );
 };

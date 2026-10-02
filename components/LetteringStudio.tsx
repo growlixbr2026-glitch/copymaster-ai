@@ -107,7 +107,7 @@ Esta é a ferramenta para quem precisa de artes onde o texto é o protagonista. 
             <div className="h-full flex flex-col items-center justify-center text-slate-600 p-6">{loading ? <RefreshCw className="w-16 h-16 mb-4 animate-spin text-lime-500" /> : <TypeIcon className="w-16 h-16 mb-4 opacity-20" />}<p className="text-center text-slate-400">{loading ? 'Projetando Tipografia...' : t('msg_wait_desc')}</p></div>
         )}
       </>
-  )} hasResults={results.length > 0} />
+  )} hasResults={results.length > 0} sessionId="lettering" />
   );
 };
 

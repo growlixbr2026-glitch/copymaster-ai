@@ -248,7 +248,7 @@ Como usar:
                 <Sparkles className={`w-5 h-5 ${sparkleColor}`} />
                 <h3 className="text-sm font-black text-white uppercase tracking-widest">Configuração de {activeTab.toUpperCase()}</h3>
                 <OutputKindBadge kind={activeTab === 'image' || activeTab === 'video' ? 'image' : 'text'} />
-                <SectionHelp title={t('nav_media')} description={mediaHelpDescription} />
+                <SectionHelp title={t('nav_media')} description={mediaHelpDescription} sessionId="media" />
             </div>
 
             {activeTab === 'image' && (

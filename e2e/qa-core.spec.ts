@@ -19,7 +19,8 @@ test('core: ideas blocks empty niche', async ({ page }) => {
   expect(await genBtn.isDisabled()).toBeTruthy();
 });
 
-test('core: all 28 sessions render without page errors', async ({ page }) => {
+test('core: all sessions render without page errors', async ({ page }) => {
+  test.setTimeout(120000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 150)));
   await page.goto('/');
@@ -27,10 +28,10 @@ test('core: all 28 sessions render without page errors', async ({ page }) => {
   await page.waitForTimeout(600);
   const tabs = page.getByRole('tab');
   const n = await tabs.count();
-  expect(n).toBeGreaterThanOrEqual(28);
+  expect(n).toBeGreaterThanOrEqual(33);
   for (let i = 0; i < n; i++) {
     await tabs.nth(i).click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(200);
     const len = (((await page.locator('#root').textContent()) || '').trim().length);
     expect(len, `sessao ${i} em branco`).toBeGreaterThan(200);
   }

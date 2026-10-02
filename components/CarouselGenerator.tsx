@@ -147,7 +147,7 @@ Esta é a ferramenta de maior retenção orgânica do Instagram e LinkedIn. Carr
   );
 
   return (
-    <ToolLayout title={t('car_title')} icon={GalleryHorizontal} iconColorClass="text-teal-400" description={carouselHelpDescription} loading={loading} error={error} isLocked={isLocked} onToggleLock={() => setIsLocked(!isLocked)} outputKind="image" sidebarContent={sidebarContent} actions={actions} mainContent={mainContent} hasResults={slides.length > 0} />
+    <ToolLayout title={t('car_title')} icon={GalleryHorizontal} iconColorClass="text-teal-400" description={carouselHelpDescription} loading={loading} error={error} isLocked={isLocked} onToggleLock={() => setIsLocked(!isLocked)} outputKind="image" sidebarContent={sidebarContent} actions={actions} mainContent={mainContent} hasResults={slides.length > 0} sessionId="carousel" />
   );
 };
 

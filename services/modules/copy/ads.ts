@@ -1,10 +1,11 @@
 
 import { callAI, GOLDEN_SYSTEM_INSTRUCTIONS } from '../../core/aiClient';
+import { personaBlock } from './crewaiPersona';
 
 export const generateAdsService = async (params: any, onChunk?: (text: string) => void) => {
     const prompt = `
     ⚠️ **MODO OPERAÇÃO: GESTOR DE PERFORMANCE (ITEM 24)** ⚠️
-    
+    ${personaBlock(params?.crewPersona)}
     TASK: 03 Variações de Anúncios de Alta Performance (TESTE A/B).
     PLATAFORMA: ${params.platform} | OBJETIVO: ${params.goal}
     PRODUTO: ${params.productName} | OFERTA: ${params.offer || 'não informada'}
