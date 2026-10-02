@@ -1,15 +1,10 @@
 import { callAI, GOLDEN_SYSTEM_INSTRUCTIONS } from '../../core/aiClient';
+import { toFriendlyError } from '../../friendlyErrors';
+import { AI_TELLTALE_SIGNS, quickLocalScan, localEstimate, burstinessOf, type AISignalHit } from './textForensics';
+export type { AISignalHit };
 
 // Gate: Humanizar só exibe resultado quando a probabilidade de IA for >= 70%.
 export const HUMANIZE_THRESHOLD = 70;
-
-export interface AISignalHit {
-  family: string;
-  label: string;
-  evidence: string[];
-  count: number;
-  fix: string;
-}
 
 export interface AICheckResult {
   score: number;
@@ -19,99 +14,56 @@ export interface AICheckResult {
   caveat: string;
   truncated: boolean;
   error?: string;
-}
-
-// Taxonomia de sinais de texto malfeito por IA (PT-BR).
-// Base: Exame (perplexidade/burstiness, conectivos, dualidade, trios),
-// Estadão (14 dicas), USP/Nature-Pangram, surveys arXiv (riqueza lexical,
-// formalidade impessoal, regularidade sintática).
-export const AI_TELLTALE_SIGNS: { family: string; label: string; patterns: string[]; fix: string }[] = [
-  {
-    family: 'conectivos_inchados',
-    label: 'Conectivos inchados',
-    patterns: ['além disso', 'por conseguinte', 'em suma', 'vale ressaltar', 'é importante ressaltar', 'vale destacar', 'de forma geral', 'em termos gerais', 'no que diz respeito'],
-    fix: 'Troque por transições variadas e curtas (mas, e, então, por isso) ou corte o conectivo e emende as frases.',
-  },
-  {
-    family: 'encerramento_generico',
-    label: 'Conclusão genérica que repete o texto',
-    patterns: ['concluindo', 'diante do exposto', 'em conclusão', 'para concluir', 'em resumo', 'portanto,', 'de modo geral,'],
-    fix: 'Feche com uma frase de ação, dado concreto ou pergunta — nunca resumindo o que já foi dito.',
-  },
-  {
-    family: 'dualidade',
-    label: 'Dualidade artificial (não é X, é Y)',
-    patterns: ['não é sobre', 'não se trata de', 'não é apenas', 'é muito mais do que', 'vai além de'],
-    fix: 'Afirme direto a tese sem o contraste fabricado de negação seguida de exaltação.',
-  },
-  {
-    family: 'trios_complementares',
-    label: 'Trios complementares para dar corpo',
-    patterns: ['rápido, fácil e', 'claro, objetivo e', 'de forma clara, objetiva e', 'eficiente, eficaz e'],
-    fix: 'Fique com UM adjetivo forte ou troque o trio por um exemplo concreto.',
-  },
-  {
-    family: 'transicoes_padronizadas',
-    label: 'Transições padronizadas',
-    patterns: ['por outro lado', 'por sua vez', 'nesse sentido', 'nesse contexto', 'a seguir', 'como mencionado'],
-    fix: 'Varie o ritmo: frase curta de impacto seguida de frase longa explicativa.',
-  },
-  {
-    family: 'hedging_politico',
-    label: 'Polidez e hedging excessivos',
-    patterns: ['é fundamental', 'é essencial', 'desempenha um papel fundamental', 'no mundo atual', 'na era digital', 'cada vez mais'],
-    fix: 'Corte o hedging e assuma uma opinião: troque o genérico por um verbo forte e específico.',
-  },
-  {
-    family: 'superficialidade',
-    label: 'Profundidade aparente sem dados',
-    patterns: ['diversos estudos', 'especialistas afirmam', 'técnicas de gestão', 'estratégias eficazes', 'resultados expressivos', 'de forma significativa'],
-    fix: 'Ancore em UM dado, nome, número ou caso concreto — ou marque [INSERIR DADO] em vez de fingir evidência.',
-  },
-  {
-    family: 'neutralidade_asseptica',
-    label: 'Neutralidade asséptica sem voz',
-    patterns: ['é possível afirmar', 'pode-se dizer', 'há quem diga', 'de maneira geral', 'em linhas gerais'],
-    fix: 'Assine o texto: primeira pessoa ou juízo explícito, com referência cultural concreta quando couber.',
-  },
-];
-
-// Varredura local determinística: acha expressões literais da taxonomia.
-// Serve de suspeita instantânea e de guia cirúrgico para o Humanizar.
-export function quickLocalScan(text: string, maxEvidence = 3): AISignalHit[] {
-  if (!text) return [];
-  const lower = text.toLowerCase();
-  const hits: AISignalHit[] = [];
-  for (const s of AI_TELLTALE_SIGNS) {
-    const evidence: string[] = [];
-    for (const p of s.patterns) {
-      const idx = lower.indexOf(p.toLowerCase());
-      if (idx >= 0) {
-        // Extrai a frase ao redor da ocorrência como evidência literal
-        const start = Math.max(0, text.lastIndexOf('.', idx - 1) + 1);
-        let end = text.indexOf('.', idx + p.length);
-        end = end < 0 ? Math.min(text.length, idx + 120) : Math.min(text.length, end + 1);
-        evidence.push(text.slice(start, end).trim().slice(0, 140));
-        if (evidence.length >= maxEvidence) break;
-      }
-    }
-    if (evidence.length > 0) hits.push({ family: s.family, label: s.label, evidence, count: evidence.length, fix: s.fix });
-  }
-  return hits;
+  /** 'llm' = perito consultado; 'local' = FALLBACK determinístico (sem LLM) */
+  mode?: 'llm' | 'local';
 }
 
 const bandOf = (score: number): AICheckResult['band'] =>
   score >= HUMANIZE_THRESHOLD ? 'provavel_ia' : score >= 40 ? 'misto' : 'humano';
 
-const SIGNALS_CATALOG = AI_TELLTALE_SIGNS.map((s) => `- ${s.family} (${s.label}): expressões típicas: ${s.patterns.slice(0, 5).join('; ')}.`).join('\n');
+// Catálogo entregue ao perito: 8 famílias literais + famílias novas do
+// painel local (léxico/regex/invisíveis) — ele precisa saber o que medimos.
+const SIGNALS_CATALOG =
+  AI_TELLTALE_SIGNS.map((s) => `- ${s.family} (${s.label}): expressões típicas: ${s.patterns.slice(0, 5).join('; ')}.`).join('\n')
+  + '\n'
+  + [
+    '- slop_lexico (Léxico de termos prontos da IA): termos como "no mundo de hoje", "potencializar", "robusto", "sinergia", "incrível" fora de contexto.',
+    '- caracteres_invisiveis (Caracteres invisíveis): zero-width/BOM — típico de texto colado de IA ou PDF.',
+    '- mobilizacao_forcada (Mobilização forçada): mural de 5+ hashtags ou bait ("concorda?", "comenta aí").',
+    '- auto_revelacao_ia (Auto-revelação de IA): "como uma IA", "modelo de linguagem", "gerado por IA".',
+    '- pergunta_retorica (Pergunta retórica isolada): linha só com "Fácil?", "Simples?", "Óbvio?".',
+    '- parede_emoji (Parede de emojis): 3+ emojis decorativos em sequência.',
+  ].join('\n');
+
+// FALLBACK honesto (§8): o perito LLM caiu — o usuário NÃO fica cego.
+// Devolve a estimativa local determinística com caveat explícito; mode 'local'
+// faz a toolbar avisar que é heurística, não veredito. Nunca erro silencioso.
+const localFallback = (slice: string, local: AISignalHit[], error: string, truncated: boolean): AICheckResult => {
+  const est = localEstimate(slice);
+  return {
+    score: est.score,
+    band: bandOf(est.score),
+    signals: local,
+    reason: `Estimativa local sem LLM: ${est.density.toFixed(1)} sinais/100 palavras${est.frases ? `, ritmo CV ${est.cv.toFixed(2)} em ${est.frases} frases` : ' (texto curto demais para medir ritmo)'}.`,
+    caveat: `Perito LLM indisponível (${toFriendlyError(error)}). Heurística local determinística — use como estimativa, não como veredito.`,
+    truncated,
+    mode: 'local',
+  };
+};
 
 export const checkAIProbabilityService = async (text: string, language: string): Promise<AICheckResult> => {
   const truncated = text.length > 1500;
   const slice = text.substring(0, 1500);
   const local = quickLocalScan(slice);
+  const burst = burstinessOf(slice);
+  const ritmo = burst
+    ? `CV ${burst.cv.toFixed(2)} em ${burst.frases} frases — ${burst.cv < 0.3 ? 'uniforme, típico de IA' : 'variado, típico humano'}`
+    : 'texto curto demais para medir ritmo';
+  // Evidência MEDIDA (não pedida): contagens, trechos e ritmo saem da varredura
+  // determinística — o perito julga sobre números, não sobre impressões.
   const localHint = local.length > 0
-    ? `SUSPEITAS LOCAIS (varredura determinística, confirme ou refute cada uma):\n${local.map((h) => `- ${h.family}: "${h.evidence[0]}"`).join('\n')}`
-    : 'Varredura local não achou expressões da taxonomia — avalie ritmo, perplexidade e voz mesmo assim.';
+    ? `EVIDÊNCIA LOCAL MEDIDA (varredura determinística — confirme ou refute cada uma):\n${local.map((h) => `- ${h.family}: ${h.count}x — "${(h.evidence[0] || '').slice(0, 110)}"`).join('\n')}\nRITMO: ${ritmo}`
+    : `Varredura local não achou expressões da taxonomia. RITMO: ${ritmo} — avalie ritmo, perplexidade e voz mesmo assim.`;
 
   const prompt = `
   ⚠️ **MODO OPERAÇÃO: PERITO FORENSE DE TEXTO (ITEM 20)** ⚠️
@@ -140,7 +92,7 @@ export const checkAIProbabilityService = async (text: string, language: string):
   const response = await callAI(prompt, GOLDEN_SYSTEM_INSTRUCTIONS, 'gemini-3-flash-preview', undefined, {
     responseMimeType: 'application/json',
   });
-  if (response.error) return { score: 0, band: 'humano', signals: [], reason: '', caveat: '', truncated, error: response.error };
+  if (response.error) return localFallback(slice, local, response.error, truncated);
   const parseCheck = (raw: string): AICheckResult | null => {
     try {
       const parsed = JSON.parse(raw);
@@ -158,7 +110,7 @@ export const checkAIProbabilityService = async (text: string, language: string):
             };
           }).filter((s: AISignalHit) => s.evidence.length > 0 || s.count > 0)
         : [];
-      return { score, band: bandOf(score), signals, reason: String(parsed.reason || ''), caveat: String(parsed.caveat || ''), truncated };
+      return { score, band: bandOf(score), signals, reason: String(parsed.reason || ''), caveat: String(parsed.caveat || ''), truncated, mode: 'llm' };
     } catch { return null; }
   };
   let result = parseCheck(response.text || '');
@@ -169,13 +121,18 @@ export const checkAIProbabilityService = async (text: string, language: string):
     if (st !== -1 && en > st) result = parseCheck(s.substring(st, en + 1));
   }
   if (result) return result;
-  return { score: 0, band: 'humano', signals: [], reason: '', caveat: '', truncated, error: 'Analysis failed' };
+  return localFallback(slice, local, 'Analysis failed', truncated);
 };
 
 export const humanizeTextService = async (text: string, language: string, signals?: AISignalHit[]) => {
-  const found = signals && signals.length > 0 ? signals : quickLocalScan(text);
+  // Prioridade cirúrgica: o sinal com MAIOR count primeiro (o que mais polui
+  // vira PRIORIDADE #1; os demais na fila) — fecha o loop medir→operar→medir.
+  const found = (signals && signals.length > 0 ? signals : quickLocalScan(text))
+    .slice()
+    .sort((a, b) => b.count - a.count);
+  const top = found[0];
   const surgery = found.length > 0
-    ? `CIRURGIA GUIADA — corrija exatamente estes sinais detectados:\n${found.map((h) => `- ${h.family} (${h.label}): ${h.fix} Evidência: "${(h.evidence[0] || '').slice(0, 120)}"`).join('\n')}`
+    ? `CIRURGIA GUIADA — ataque nesta ordem (do maior para o menor):\nPRIORIDADE #1 — ${top.family} (${top.label}, ${top.count}x): ${top.fix} Evidência: "${(top.evidence[0] || '').slice(0, 120)}"${found.slice(1).map((h) => `\n- ${h.family} (${h.label}, ${h.count}x): ${h.fix} Evidência: "${(h.evidence[0] || '').slice(0, 120)}"`).join('')}`
     : 'Nenhum sinal catalogado detectado: foque em ritmo (burstiness) e voz própria.';
 
   const prompt = `

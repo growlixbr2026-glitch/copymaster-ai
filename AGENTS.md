@@ -714,15 +714,37 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
 
 ---
 
-## 5. Verificar IA / Humanizar (`tools/aiDetection.ts` + toolbar)
-- Taxonomia PT-BR de 8 famílias de sinais de IA + `quickLocalScan()` determinístico.
-- `checkAIProbabilityService` → `{score, band, signals, reason, caveat}`
+## 5. Verificar IA / Humanizar (`tools/aiDetection.ts` + `tools/textForensics.ts` + toolbar)
+- **Forense local** vive em `tools/textForensics.ts` (puro, 0 rede/0 quota;
+  testado direto no Node por `e2e/humanizer-local.spec.ts`): taxonomia PT-BR
+  de 8 famílias + `quickLocalScan()` (literal **+ léxico `data/slopPT.ts`
+  ~75 entradas + 7 estruturas regex + caracteres invisíveis**; conta todas as
+  ocorrências e deduplica por índice quando literal e estrutura apanham a mesma
+  passagem). Famílias novas: `slop_lexico`, `caracteres_invisiveis`,
+  `mobilizacao_forcada`, `auto_revelacao_ia`, `pergunta_retorica`, `parede_emoji`.
+  Léxico: `safe:true` = substituição mecânica permitida (invariante ou com
+  variantes de gênero/número); `safe:false` = só sinaliza. Estruturas regex
+  (trio/dualidade/hashtags/bait/pergunta retórica/parede de emoji) **nunca**
+  são substituídas — só viram evidência.
+- `checkAIProbabilityService` → `{score, band, signals, reason, caveat, mode}`
   (faixas: <40 humano, 40-69 misto, ≥70 provável IA). Badge clicável no toolbar
-  abre painel de sinais (família, count, evidência 120c + caveat).
+  abre painel de sinais (família, count, evidência 120c + caveat). O prompt do
+  perito recebe **EVIDÊNCIA LOCAL MEDIDA** (contagens + trechos + ritmo
+  `burstinessOf` CV) em vez de dica genérica — ele julga sobre números.
+- **Fallback honesto**: se o perito LLM falhar (quota/rede/JSON inutilizável),
+  devolve `localEstimate()` (determinístico: densidade de sinais/100 palavras +
+  uniformidade de frases) com `mode:'local'` e caveat explícito — a toolbar
+  avisa "heurística local, não veredito". **Verificar IA nunca fica bloqueado**
+  (§8: erro vira aviso visível, nunca silêncio).
 - `HUMANIZE_THRESHOLD = 70`: **Humanizar auto-verifica** (reusa se texto inalterado);
-  abaixo de 70 bloqueia com aviso e não altera nada; a partir de 70 aplica cirurgia
-  guiada pelos sinais (preserva fatos, `[INSERIR DADO]` em vez de inventar) via
-  `humanizeTextService` e re-mede o delta (`IA X% → Y%`).
+  abaixo de 70 bloqueia com aviso e não altera nada; a partir de 70 aplica
+  **passo 0 determinístico** `autoCleanText()` (remove invisíveis + troca só os
+  termos `safe` do léxico, com caixa preservada — em dash/aspas curvas são
+  tipografia PT legítima e não são tocados) e depois a cirurgia LLM guiada
+  pelos sinais ordenados por count (**PRIORIDADE #1 = maior count**; preserva
+  fatos, `[INSERIR DADO]` em vez de inventar). Saída passa por
+  `stripInvisibleChars()` de cinto-e-suspensório, re-mede o delta
+  (`IA X% → Y%`) e reporta a pré-limpeza no aviso (`Pré-limpeza: N termo(s)`).
 - Toolbar: quick actions (Expandir/Encurtar/Simplificar/Emojis via
   `refineCopyService`; `cleanAIOutput` corta divisores/prefixos/`Aqui está...`),
   custom + meta de caracteres (meta só vale p/ custom/Transformar), Transformar
@@ -748,8 +770,12 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
   skip-link + teclado), `prompt-harvest` (payloads reais → `e2e-evidence/`),
   `server-proxy` (contrato do `/api/ai`: 405/403/400/SSRF/503 sem upstream +
   seam prod ON roteando a geração por `/api/ai` sem auth + seam dev OFF usando
-  chamada direta — 9 testes, 0 quota). Suíte determinística = essas 17 specs
-  (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 83/83.
+  chamada direta — 9 testes, 0 quota),
+  `humanizer-local` (8 testes: forense PT-BR puro no Node — gate 70 × faixa
+  humano, estruturas regex, dedup léxico, autoClean, estabilidade 5×, vazio —
+  + browser mock: fallback `mode:'local'` nunca bloqueia e humanizar com
+  pré-limpeza/delta/saída sem invisível). Suíte determinística = essas 18 specs
+  (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 91/91.
 - Com quota `:free` (50/dia, reset diário): `user-full` (140 linhas, `retries:1`,
   hero + ≥20 `Acessar Módulo`, navega 28 tabs + wallet/settings, bloqueios,
   2 gerações reais — Ideas ~40KB/740s polling `Baixar Relatório`, Copy 340s
@@ -982,7 +1008,8 @@ timeouts :831, `testConnection` :948, GOLDEN :28, VISUAL :271. `vaultService.ts`
 `friendlyErrors.ts`: `toFriendlyError` :6. `stripCopyFormat.ts`:
 `stripCopyMarkdown` :11, `splitCopyVariants` :55, `stripVisualPrompt` :69,
 `splitOptions` :101, `splitVisualResult` :120. `aiDetection.ts`:
-`HUMANIZE_THRESHOLD` :4.
+`HUMANIZE_THRESHOLD` :7. `textForensics.ts`: `quickLocalScan` :105,
+`localEstimate` :226.
 `tools/diagnostic.ts`: `AuditMode` :50, `MARK` :150, `AUDIT_MODULE_IDS` :436,
 `runStressTestService` :438.
 `SettingsCenter.tsx`: POST `/api/env` :107, `handleSave` :152.
@@ -1207,5 +1234,27 @@ Para revalidar: `python3 -c "import pathlib; t=pathlib.Path('services/core/aiCli
   versionado); README sem a seção de skills de agente e com as notas
   de Stack/Segurança atualizadas (proxy `/api/ai` já implementado); frase do
   header deste arquivo neutralizada (sem nomear modelos de código).
+- Forense local upgrade (MIT, `Jakeschincariol/linkedin-agent-skill`) em
+  2026-10-01: léxico novo `data/slopPT.ts` (~62 entradas find/replace com
+  auditoria de invariância PT + 7 estruturas regex de engajamento) +
+  `services/modules/tools/textForensics.ts` **novo e puro** (`quickLocalScan`
+  com contagens reais + dedup por índice literal×estrutura, `burstinessOf`,
+  `localEstimate`, `autoCleanText`, `stripInvisibleChars` — testável direto
+  no Node sem browser); `aiDetection.ts` ganha `mode: 'llm'|'local'` + fallback
+  local honesto (perito morto → estimativa com caveat, **nunca bloqueia** §8) +
+  EVIDÊNCIA LOCAL MEDIDA no prompt do perito + cirurgia humana com
+  **PRIORIDADE #1 = maior count**; toolbar: passo 0 `autoCleanText` (só
+  entradas `safe`, tipografia PT intacta), aviso `mode:'local'`, selo
+  "estimativa local", `Pré-limpeza: N termo(s)`. Gate 70 **inalterado** (sobre
+  o score LLM ou fallback local). Bugs do loop: `\b` em JS é ASCII-only →
+  lookarounds `(?<![\p{L}])`/`(?![\p{L}])` na estrutura `dualidade_nao_e`
+  (nunca use `\bé\b` com acento); `pergunta_retorica` com `/i`. Spec nova
+  `e2e/humanizer-local.spec.ts` (8 testes: 6 puros Node + 2 browser mock,
+  0 quota — calibração MAQUINA ≥70 × HUMANO <40 verificada em loop 5×).
+  Gate: `tsc` 0, `doc:check` **31 âncoras** (2 novas: `textForensics`
+  `quickLocalScan` :105 / `localEstimate` :226) + 3 invariantes, suíte
+  determinística **91/91** (18 specs, `--workers=1`, 12,7min), build canário
+  (`.env` movido + `try/finally`) limpo + `security:bundle` OK + `.env`
+  restaurado. §5/§6/§9 + `check-anchors.py` atualizados no mesmo commit.
 - Para vigiar: contagem 28 no título do §4, tabela de divisores completa
   (13 + NOTA), `AUDIT_MODULE_IDS.length === 24`.

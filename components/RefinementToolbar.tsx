@@ -8,6 +8,7 @@ import {
 import { refineCopyService, checkAIProbabilityService, humanizeTextService } from '../services/geminiService';
 import { HUMANIZE_THRESHOLD } from '../services/modules/tools/aiDetection';
 import type { AISignalHit } from '../services/modules/tools/aiDetection';
+import { autoCleanText, stripInvisibleChars } from '../services/modules/tools/textForensics';
 import { getLocalizedLists } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import TextToSpeech from './TextToSpeech';
@@ -143,25 +144,35 @@ export const RefinementToolbar: React.FC<RefinementToolbarProps> = ({
               setLoading(false);
               return;
           }
-          const { text: newText, error } = await humanizeTextService(text, language, check.signals || []);
-          if (error) { alert(toFriendlyError(error)); }
+          // PASSO 0 (determinístico, 0 quota): remove caracteres invisíveis e
+          // substitui termos "safe" do léxico ANTES do LLM — o ghostwriter já
+          // recebe texto limpo e a cirurgia foca no difícil.
+          const prec = autoCleanText(text);
+          const { text: newText, error } = await humanizeTextService(prec.text, language, check.signals || []);
+          if (error) { alert(toFriendlyError(error)); } // texto intacto — honesto
           else {
-              const cleaned = cleanAIOutput(newText);
+              // Cinto e suspensório: invisíveis que o LLM devolver também saem.
+              const cleaned = stripInvisibleChars(cleanAIOutput(newText)).text;
               onTextUpdate(cleaned);
               setHumanScore(null);
               setCheckedText(null);
+              const prepParts: string[] = [];
+              if (prec.replacedTerms > 0) prepParts.push(`${prec.replacedTerms} termo(s)`);
+              if (prec.removedChars > 0) prepParts.push(`${prec.removedChars} invisível(is)`);
+              const prep = prepParts.length > 0 ? ` Pré-limpeza: ${prepParts.join(' + ')}.` : '';
               // Re-mede para exibir o delta antes/depois
               try {
                   const after = await checkAIProbabilityService(cleaned, language);
                   if (!(after as any).error) {
                       setHumanScore(after as any);
                       setCheckedText(cleaned);
-                      setNotice({ kind: 'done', text: `Humanizado: IA ${check.score}% → ${(after as any).score}%. Contexto preservado.` });
+                      const tag = (after as any).mode === 'local' ? ' (estimativa local)' : '';
+                      setNotice({ kind: 'done', text: `Humanizado${tag}: IA ${check.score}% → ${after.score}%.${prep} Contexto preservado.` });
                   } else {
-                      setNotice({ kind: 'done', text: `Humanizado a partir de IA ${check.score}%. Contexto preservado.` });
+                      setNotice({ kind: 'done', text: `Humanizado a partir de IA ${check.score}%.${prep} Contexto preservado.` });
                   }
               } catch {
-                  setNotice({ kind: 'done', text: `Humanizado a partir de IA ${check.score}%. Contexto preservado.` });
+                  setNotice({ kind: 'done', text: `Humanizado a partir de IA ${check.score}%.${prep} Contexto preservado.` });
               }
           }
       } finally {
@@ -178,6 +189,11 @@ export const RefinementToolbar: React.FC<RefinementToolbarProps> = ({
           setNotice({ kind: 'blocked', text: toFriendlyError((res as any).error) });
       } else {
           setHumanScore({ score: res.score, reason: res.reason, signals: (res as any).signals, caveat: (res as any).caveat });
+          // Fallback local: avisa SEMPRE (nem sinal abriria o painel) que é
+          // heurística determinística, não veredito do perito.
+          if ((res as any).mode === 'local' && res.caveat) {
+              setNotice({ kind: 'done', text: res.caveat });
+          }
       }
       setCheckedText(text);
       setLoading(false);
