@@ -54,6 +54,13 @@ function parseEnvFile(content: string): Record<string, string> {
   return out;
 }
 
+// Campos extra de configuração (não-chaves) aceitos pelo POST /api/env: o
+// Centro de Comando grava CLOUDFLARE_ACCOUNT_ID no .env quando o usuário
+// informa o Account ID no card Cloudflare — mesmo fluxo KEY=VALUE das chaves.
+const EXTRA_ENV_VARS: Record<string, string> = {
+  cloudflare_account_id: 'CLOUDFLARE_ACCOUNT_ID',
+};
+
 function maskValue(v: string): string {
   if (!v || v.length < 8) return '********';
   return v.slice(0, 4) + '*'.repeat(Math.max(6, v.length - 8)) + v.slice(-4);
@@ -155,13 +162,19 @@ function envApiPlugin() {
             try {
               const { provider, apiKey } = JSON.parse(body || '{}');
               if (!provider || typeof apiKey !== 'string') throw new Error('provider e apiKey obrigatórios');
-              const envKeys = ENV_KEY_MAP[provider];
+              // Provider de chave OU campo extra (ex.: CLOUDFLARE_ACCOUNT_ID).
+              const envKeys = ENV_KEY_MAP[provider] || (EXTRA_ENV_VARS[provider] ? [EXTRA_ENV_VARS[provider]] : undefined);
               if (!envKeys) throw new Error('provider desconhecido: ' + provider);
               const envKey = envKeys[0];
               const trimmed = apiKey.trim();
               // CRLF: uma chave contendo \r/\n injetaria linhas KEY=VALUE
               // arbitrárias no .env (ex.: trocar LITELLM_MODEL_PRIMARY).
               if (/[\r\n]/.test(trimmed)) throw new Error('Chave com quebra de linha (CRLF) recusada.');
+              // Account ID (Cloudflare): valor hex/alnum de 32 chars — bloqueia
+              // URL ou texto livre colado no .env.
+              if (EXTRA_ENV_VARS[provider] && trimmed && !/^[A-Za-z0-9-]{8,64}$/.test(trimmed)) {
+                throw new Error('Account ID inválido: use o valor de 32 caracteres (dash.cloudflare.com → Workers & Pages → ID da conta).');
+              }
               let content = '';
               try { content = fs.readFileSync(envFilePath, 'utf8'); } catch { content = ''; }
               const lines = content.split('\n');
@@ -181,7 +194,14 @@ function envApiPlugin() {
                   newLines.push(line);
                 }
               }
-              if (!found && trimmed) newLines.push(`${envKey}=${trimmed}`);
+              if (!found && trimmed) {
+                const nl = `${envKey}=${trimmed}`;
+                // Simetria adicionar→remover: o split('\n') de um arquivo que
+                // termina em \n deixa um '' fantasma no fim; anexar DEPOIS dele
+                // virava linha em branco e a remoção deixava +1 \n por rodada.
+                if (lines.length > 0 && lines[lines.length - 1] === '') newLines.splice(newLines.length - 1, 0, nl);
+                else newLines.push(nl);
+              }
               if (!trimmed && found) {
               }
               let out = newLines.join('\n');
@@ -194,7 +214,9 @@ function envApiPlugin() {
                   return !lowerMap.has(k);
                 }).join('\n');
               }
-              fs.writeFileSync(envFilePath, out, 'utf8');
+              // Conteúdo idêntico = sem gravação (o watcher do Vite em .env
+              // dispara full-reload do browser a cada escrita).
+              if (out !== content) fs.writeFileSync(envFilePath, out, 'utf8');
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ ok: true, envKey, masked: trimmed ? maskValue(trimmed) : '' }));
             } catch (e: any) {
@@ -314,13 +336,17 @@ export default defineConfig(({ mode, command }) => {
       'process.env.SILICONFLOW_API_KEY': JSON.stringify((env as any).SILICONFLOW_API_KEY || process.env.SILICONFLOW_API_KEY || ""),
       'process.env.NEBIUS_API_KEY': JSON.stringify((env as any).NEBIUS_API_KEY || process.env.NEBIUS_API_KEY || ""),
       'process.env.CLOUDFLARE_API_KEY': JSON.stringify((env as any).CLOUDFLARE_API_KEY || process.env.CLOUDFLARE_API_KEY || ""),
+      // Não-segredo (ID de conta aparece em URLs do próprio dashboard): fica
+      // de fora do blanking para valer também em produção (dashboard Vercel).
+      'process.env.CLOUDFLARE_ACCOUNT_ID': JSON.stringify((env as any).CLOUDFLARE_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID || ""),
       'process.env': {}
       };
       // Build: todo segredo vira "" (ou [] p/ os pools *_LIST). Os modelos
-      // LITELLM_MODEL_* não são segredos e o catch-all `process.env` vira {}.
+      // LITELLM_MODEL_* e o CLOUDFLARE_ACCOUNT_ID não são segredos e o
+      // catch-all `process.env` vira {}.
       if (!embedSecrets) {
         for (const k of Object.keys(d)) {
-          if (k === 'process.env' || k.endsWith('LITELLM_MODEL_PRIMARY') || k.endsWith('LITELLM_MODEL_FALLBACK')) continue;
+          if (k === 'process.env' || k.endsWith('LITELLM_MODEL_PRIMARY') || k.endsWith('LITELLM_MODEL_FALLBACK') || k.endsWith('CLOUDFLARE_ACCOUNT_ID')) continue;
           d[k] = k.endsWith('_LIST') ? '[]' : '""';
         }
       }

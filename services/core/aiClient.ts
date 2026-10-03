@@ -647,6 +647,8 @@ export const callAI = async (
         if (endpointUrl.includes('{account_id}')) {
             let accountId = '';
             try { accountId = (localStorage.getItem('cloudflare_account_id') || '').trim(); } catch {}
+            // Fallback .env (CLOUDFLARE_ACCOUNT_ID) — gravado pelo Centro de Comando via POST /api/env.
+            if (!accountId) { try { accountId = String((process.env as any).CLOUDFLARE_ACCOUNT_ID || '').trim(); } catch {} }
             if (!accountId) return { text: '', error: `Cloudflare: informe seu Account ID no Centro de Comando (card Cloudflare) para ativar este motor.` };
             endpointUrl = endpointUrl.replace('{account_id}', accountId);
         }

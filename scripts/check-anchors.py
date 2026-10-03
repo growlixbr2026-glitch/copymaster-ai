@@ -17,11 +17,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 TOL = 3  # tolerancia em linhas (edits vizinhos deslocam o simbolo)
 
 # (arquivo, agulha, linha esperada) — recalibrado em 2026-09-30 (aiClient deslocado +24/+28; auto-seleção + N chaves por provider)
+# recalibrado em 2026-10-02 (CLOUDFLARE_ACCOUNT_ID → .env: aiClient +2 / SettingsCenter +2)
 ANCHORS = [
     ("services/core/aiClient.ts", "export const callAI", 288),
-    ("services/core/aiClient.ts", "STRICT_NO_TOP_LEVEL_SYSTEM", 809),
-    ("services/core/aiClient.ts", "isLocal ? 3500 : 600000", 831),
-    ("services/core/aiClient.ts", "testConnection", 948),
+    ("services/core/aiClient.ts", "STRICT_NO_TOP_LEVEL_SYSTEM", 811),
+    ("services/core/aiClient.ts", "isLocal ? 3500 : 600000", 833),
+    ("services/core/aiClient.ts", "testConnection", 950),
     ("services/core/aiClient.ts", "GOLDEN_SYSTEM_INSTRUCTIONS", 28),
     ("services/core/aiClient.ts", "VISUAL_MASTER_PROTOCOL", 271),
     ("services/vaultService.ts", "copymaster_vault", 1),
@@ -43,8 +44,8 @@ ANCHORS = [
     ("services/modules/tools/diagnostic.ts", "MARK =", 172),
     ("services/modules/tools/diagnostic.ts", "AUDIT_MODULE_IDS", 672),
     ("services/modules/tools/diagnostic.ts", "runStressTestService", 677),
-    ("components/SettingsCenter.tsx", "/api/env", 107),
-    ("components/SettingsCenter.tsx", "handleSave", 152),
+    ("components/SettingsCenter.tsx", "/api/env", 109),
+    ("components/SettingsCenter.tsx", "handleSave", 154),
     ("hooks/useAIGenerator.ts", "isQuotaError", 12),
     ("components/ToolLayout.tsx", "OutputKindBadge", 10),
     ("components/ToolLayout.tsx", "EngineLink", 24),

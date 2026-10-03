@@ -53,6 +53,8 @@ const SettingsCenter: React.FC<{ language: string }> = ({ language }) => {
     try { return JSON.parse(localStorage.getItem('copymaster_keyhealth:v1') || 'null'); } catch { return null; }
   });
   const [turbo, setTurbo] = useState(() => { try { return localStorage.getItem('turbo_mode') === '1'; } catch { return false; } });
+  // Feedback da gravação do CLOUDFLARE_ACCOUNT_ID no .env (POST no blur do campo do card).
+  const [cfIdStatus, setCfIdStatus] = useState<{ ok: boolean; msg: string } | null>(null);
 
   const handleAuditAll = async () => {
     setAuditing(true);
@@ -168,6 +170,10 @@ const SettingsCenter: React.FC<{ language: string }> = ({ language }) => {
     }
     await refreshVaultMap();
     await loadEnvKeys();
+    // Account ID do Cloudflare → .env (dev). Só quando há valor: limpar o
+    // campo é ação explícita do onBlur, não da gravação geral de chaves.
+    const cfId = readAccountId();
+    if (cfId) await saveCloudflareAccountId(cfId);
     const parts: string[] = [];
     if (added > 0) parts.push(`${added} chave(s) adicionada(s) no cofre`);
     if (failed > 0) parts.push(`${failed} recusada(s) no teste`);
@@ -180,6 +186,44 @@ const SettingsCenter: React.FC<{ language: string }> = ({ language }) => {
       setTimeout(() => { setSaveState('idle'); }, 2000);
     }, 500);
   };
+
+  // Account ID efetivo: localStorage (runtime) → .env embutido pelo `define`.
+  const readAccountId = (): string => {
+    let v = '';
+    try { v = (localStorage.getItem('cloudflare_account_id') || '').trim(); } catch {}
+    return v || String((process.env as any).CLOUDFLARE_ACCOUNT_ID || '').trim();
+  };
+
+  // Grava/remove CLOUDFLARE_ACCOUNT_ID no .env via POST /api/env (dev;
+  // produção responde 405 com a instrução do dashboard §9). §8: a falha
+  // nunca fica silenciosa — status renderizado embaixo do campo.
+  const saveCloudflareAccountId = async (value: string) => {
+    try {
+      const resp = await fetch('/api/env', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider: 'cloudflare_account_id', apiKey: value }) });
+      const j = await resp.json() as any;
+      if (!j.ok) throw new Error(j.error || 'falha ao gravar .env');
+      const msg = value ? '✓ gravado no .env (CLOUDFLARE_ACCOUNT_ID)' : 'removido do .env';
+      setCfIdStatus({ ok: true, msg });
+      // Gravar .env reinicia o dev server (full-reload): guarda o feedback
+      // em sessão para reexibi-lo após o reload.
+      try { sessionStorage.setItem('copymaster_cf_id_env', value ? 'saved' : 'removed'); } catch {}
+    } catch (e: any) {
+      setCfIdStatus({ ok: false, msg: 'não gravado no .env: ' + String(e?.message || e).slice(0, 140) });
+    }
+  };
+
+  // Feedback sobrevive ao full-reload do Vite (one-shot).
+  useEffect(() => {
+    try {
+      const v = sessionStorage.getItem('copymaster_cf_id_env');
+      if (v) {
+        sessionStorage.removeItem('copymaster_cf_id_env');
+        setCfIdStatus(v === 'saved'
+          ? { ok: true, msg: '✓ gravado no .env (CLOUDFLARE_ACCOUNT_ID)' }
+          : { ok: true, msg: 'removido do .env' });
+      }
+    } catch {}
+  }, []);
 
   const handleTest = async (id: string) => {
     const raw = (keys[id] || '').trim();
@@ -386,10 +430,19 @@ const SettingsCenter: React.FC<{ language: string }> = ({ language }) => {
               aria-label="Cloudflare Account ID"
               type="text"
               className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-300 font-mono text-[10px] outline-none focus:border-indigo-500"
-              defaultValue={(() => { try { return localStorage.getItem('cloudflare_account_id') || ''; } catch { return ''; } })()}
+              defaultValue={readAccountId()}
               onChange={(e) => { try { localStorage.setItem('cloudflare_account_id', e.target.value.trim()); } catch {} }}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                try { v ? localStorage.setItem('cloudflare_account_id', v) : localStorage.removeItem('cloudflare_account_id'); } catch {}
+                void saveCloudflareAccountId(v);
+              }}
               placeholder="Account ID (dash.cloudflare.com)"
             />
+            <p className="mt-1 text-[9px] text-slate-500">Saiu do campo → grava <b>CLOUDFLARE_ACCOUNT_ID</b> no .env (dev). Em produção: dashboard Vercel → Environment Variables.</p>
+            {cfIdStatus && (
+              <p className={`mt-1 text-[9px] font-bold ${cfIdStatus.ok ? 'text-emerald-500' : 'text-red-400'}`}>{cfIdStatus.msg}</p>
+            )}
           </div>
         )}
 
