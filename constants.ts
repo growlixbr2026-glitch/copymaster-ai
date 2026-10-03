@@ -8,13 +8,15 @@ import * as Citation from './data/citations';
 
 // Guides system
 export {
-  SessionGuide,
-  GuideInputField,
-  GuideSubsession,
   SESSION_GUIDES,
   registerGuide,
   getGuide,
   getAllGuides,
+} from './data/guides';
+export type {
+  SessionGuide,
+  GuideInputField,
+  GuideSubsession,
 } from './data/guides';
 
 // TTS Platforms - explicit exports

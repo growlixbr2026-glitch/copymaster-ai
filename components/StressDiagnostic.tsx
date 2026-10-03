@@ -66,6 +66,7 @@ export default function StressDiagnostic({ language }: { language: string }) {
                     <h2 className="text-4xl font-black text-white flex items-center gap-3 tracking-tighter">
                         <Stethoscope className="w-12 h-12 text-emerald-400" /> AUDITORIA V{AUDIT_MODULE_IDS.length}
                         <span className="bg-emerald-500/10 text-emerald-500 text-[10px] px-3 py-1 rounded-full border border-emerald-500/20 font-black uppercase tracking-widest ml-4">Full Scan Mode</span>
+                        <SectionHelp title={`Auditoria V${AUDIT_MODULE_IDS.length}`} description="Auditoria de conformidade dos módulos com briefing-marcador ZAFRA-42." sessionId="stress" />
                     </h2>
                     <p className="text-slate-400 text-[11px] uppercase tracking-[0.4em] font-black mt-3 flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-emerald-500" /> Monitoramento em Tempo Real de {AUDIT_MODULE_IDS.length} Módulos

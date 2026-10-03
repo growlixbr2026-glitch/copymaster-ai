@@ -91,3 +91,18 @@ export function getGuide(sessionId: string): SessionGuide | undefined {
 export function getAllGuides(): SessionGuide[] {
   return Object.values(SESSION_GUIDES);
 }
+
+// ---------------------------------------------------------------------------
+// Registro de todos os guias (conteúdo em data/guides/*.ts — só `import type`
+// daqui, sem ciclo de runtime: os arquivos de conteúdo exportam arrays de
+// SessionGuide e o registro acontece aqui, após a definição do registry).
+// ---------------------------------------------------------------------------
+import { GUIDES_STRATEGY } from './guides/strategy';
+import { GUIDES_VIDEO } from './guides/video';
+import { GUIDES_VISUAL } from './guides/visual';
+import { GUIDES_SEO } from './guides/seo';
+import { GUIDES_SALES } from './guides/sales';
+import { GUIDES_GROWTH } from './guides/growth';
+
+[...GUIDES_STRATEGY, ...GUIDES_VIDEO, ...GUIDES_VISUAL, ...GUIDES_SEO, ...GUIDES_SALES, ...GUIDES_GROWTH]
+  .forEach(registerGuide);

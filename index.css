@@ -22,6 +22,16 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Guia F1 (SectionHelp) — legibilidade garantida.
+   O modal é renderizado via portal em document.body (quebra herança de
+   `uppercase`/`font-black` dos <h2> das sessões), e este guard assegura
+   caixa normal + peso normal no texto corrido, independentemente de tema. */
+.guide-help-portal { text-transform: none; font-weight: 400; }
+.guide-help-portal h3,
+.guide-help-portal h4,
+.guide-help-portal h5 { text-transform: none; }
+.guide-help-content { font-size: 15px; line-height: 1.75; letter-spacing: normal; }
+
 
 /* =========================================
    THEME: WRITE (Light Mode / Paper) 

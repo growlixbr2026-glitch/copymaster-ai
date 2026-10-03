@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Info, X, ChevronDown, ChevronRight, ExternalLink, Copy, AlertCircle, Sparkles, BookOpen, Zap, Target, Shield, Clock, HelpCircle } from 'lucide-react';
 import TextToSpeech from './TextToSpeech';
 import { SessionGuide, getGuide } from '../data/guides';
@@ -46,6 +47,13 @@ const SectionLabels: Record<string, string> = {
 
 type GuideSectionKey = keyof SessionGuide;
 
+// Registro global de instâncias (keep-alive multi-painel): um guia aberto por vez.
+const guideInstances: {
+  ref: React.RefObject<HTMLElement>;
+  setOpen: (v: boolean) => void;
+  open: boolean;
+}[] = [];
+
 const DETAILED_SECTIONS: GuideSectionKey[] = [
   'whatIsIt',
   'purpose',
@@ -71,6 +79,54 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
   const guide = useMemo(() => sessionId ? getGuide(sessionId) : null, [sessionId]);
   const hasDetailedGuide = !!guide;
 
+  // --- Atalhos F1/Esc centralizados ---------------------------------------
+  // Como o App usa keep-alive (dezenas de SectionHelp montados), o registro é
+  // em nível de módulo: um único "dono" do guia por vez, e o F1 abre o guia
+  // da instância VISÍVEL (offsetParent !== null), nunca de um painel oculto.
+  const btnRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    const entry = {
+      ref: btnRef as React.RefObject<HTMLElement>,
+      setOpen: (v: boolean) => setIsOpen(v),
+      open: false,
+    };
+    guideInstances.push(entry);
+    return () => {
+      const i = guideInstances.indexOf(entry);
+      if (i >= 0) guideInstances.splice(i, 1);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const entry = guideInstances.find(e => e.ref === btnRef);
+    if (entry) entry.open = isOpen;
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented) return; // já tratado por outra instância neste evento
+      if (e.key === 'F1') {
+        e.preventDefault();
+        const openEntry = guideInstances.find(i => i.open);
+        if (openEntry) {
+          openEntry.setOpen(false);
+        } else {
+          const target = guideInstances.find(i => i.ref.current && i.ref.current.offsetParent !== null);
+          if (target) target.setOpen(true);
+        }
+      } else if (e.key === 'Escape') {
+        const openEntry = guideInstances.find(i => i.open);
+        if (openEntry) {
+          e.preventDefault();
+          openEntry.setOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   const toggleSection = (key: string) => {
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -82,7 +138,9 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
   };
 
   const collapseAll = () => {
-    setExpandedSections({});
+    const all: Record<string, boolean> = {};
+    DETAILED_SECTIONS.forEach(k => all[k] = false);
+    setExpandedSections(all);
   };
 
   const renderSimpleDescription = (text: string) => {
@@ -160,7 +218,7 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
     if (!value || (Array.isArray(value) && value.length === 0)) return null;
 
     const isExpanded = expandedSections[key] !== false; // default expandido
-    const Icon = IconMap[key] || <BookOpen className="w-4 h-4 text-indigo-400" />;
+    const IconEl = IconMap[key] || <BookOpen className="w-4 h-4 text-indigo-400" />;
     const Label = SectionLabels[key] || key;
 
     return (
@@ -170,7 +228,7 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
           className="w-full px-5 py-3.5 flex items-center gap-3 text-left hover:bg-slate-900/50 transition-colors"
           aria-expanded={isExpanded}
         >
-          <Icon />
+          {IconEl}
           <span className="font-bold text-white text-sm">{Label}</span>
           <span className="ml-auto text-slate-500">
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -260,7 +318,7 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
               </div>
             )}
             {typeof value === 'string' && !['workflow', 'proTips', 'commonMistakes', 'integratesWith', 'exportsTo', 'limitations', 'knownBlocks', 'outputKind'].includes(key) && (
-              <div className="prose prose-invert prose-sm max-w-none text-slate-300 leading-relaxed whitespace-pre-wrap">{value}</div>
+              <div className="text-slate-300 leading-[1.75] whitespace-pre-wrap [&_b]:text-white [&_b]:font-semibold">{value}</div>
             )}
           </div>
         )}
@@ -271,6 +329,7 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
   return (
     <>
       <button
+        ref={btnRef}
         onClick={() => setIsOpen(true)}
         className="ml-auto sm:ml-2 text-slate-500 hover:text-indigo-400 transition-colors p-1.5 rounded-full hover:bg-slate-800/50"
         aria-label="Guia detalhado da ferramenta (F1)"
@@ -279,8 +338,8 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
         <Info className="w-5 h-5" />
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsOpen(false)}>
+      {isOpen && createPortal(
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200 guide-help-portal" onClick={() => setIsOpen(false)}>
           <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl max-w-4xl w-full relative animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
             
             {/* Header */}
@@ -290,7 +349,7 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
                   <Info className="w-5 h-5 text-indigo-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white">Guia: {guide?.sessionTitle || title}</h3>
+                  <h3 className="text-lg font-bold text-white">Guia: {guide?.sessionTitle || title}</h3>
                   <p className="text-[11px] text-slate-500">{guide?.category || 'Ferramenta'}</p>
                 </div>
               </div>
@@ -309,13 +368,13 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto custom-scrollbar text-sm leading-relaxed bg-slate-900 flex-1">
+            <div className="p-6 overflow-y-auto custom-scrollbar text-[15px] leading-[1.75] text-slate-300 bg-slate-900 flex-1 guide-help-content">
               {hasDetailedGuide ? (
                 <div className="space-y-1">
                   {DETAILED_SECTIONS.map(key => renderSection(key))}
                 </div>
               ) : (
-                <div className="prose prose-invert prose-sm max-w-none">
+                <div>
                   {renderSimpleDescription(description)}
                   <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
                     <p className="text-amber-400 text-sm font-bold flex items-center gap-2">
@@ -341,7 +400,8 @@ export const SectionHelp: React.FC<SectionHelpProps> = ({ title, description, se
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
