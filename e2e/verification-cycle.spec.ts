@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { clickSessionTab, activePanelText } from './helpers/sessionTabs';
 
 const BASE_URL = '/';
 const MARKER = 'ZAFRA-42';
@@ -40,20 +41,10 @@ test.describe('CopyMaster AI - Ciclo de Verificação por Sessão', () => {
       const session = SESSIONS[i];
       console.log(`\n===== Onda ${i + 1}/${SESSIONS.length}: ${session.name} (${session.id}) =====`);
       
-      // Clique no tab correspondente
-      const targetTab = page.getByRole('tab', { name: new RegExp(session.id, 'i') });
-      const tabCount = await page.getByRole('tab').count();
-      
-      let tabFound = false;
-      for (let j = 0; j < tabCount; j++) {
-        const tabText = await page.getByRole('tab').nth(j).textContent();
-        if (tabText?.trim().toLowerCase().includes(session.id.toLowerCase())) {
-          await page.getByRole('tab', { name: new RegExp(session.id, 'i') }).click();
-          await page.waitForTimeout(800);
-          tabFound = true;
-          break;
-        }
-      }
+      // Clique no tab correspondente (id OU rótulo PT — ids como 'lp'/'magazine'
+      // não aparecem literalmente no rótulo da sidebar).
+      const tabFound = await clickSessionTab(page, session.id);
+      if (tabFound) await page.waitForTimeout(800);
       
       if (!tabFound) {
         results[session.id] = { passed: false, details: `Tab "${session.id}" não encontrada` };
@@ -65,8 +56,7 @@ test.describe('CopyMaster AI - Ciclo de Verificação por Sessão', () => {
       
       // Wait for panel
       await page.waitForTimeout(1000);
-      const activePanel = page.locator('[role="tabpanel"][aria-hidden="false"]').first();
-      const panelText = ((await activePanel.textContent()) || '').trim();
+      const panelText = await activePanelText(page);
       
       console.log(`Painel ${session.id}: ${panelText.length} chars`);
       
@@ -120,9 +110,9 @@ test.describe('CopyMaster AI - Ciclo de Verificação por Sessão', () => {
         }
         
         // Verificar saída
-        const panelContent = await activePanel.textContent();
-        const hasDivider = panelContent?.includes('|||') || false;
-        const hasNota = panelContent?.includes('NOTA') || false || panelContent?.includes('nota') || false;
+        const panelContent = await activePanelText(page);
+        const hasDivider = panelContent.includes('|||');
+        const hasNota = panelContent.includes('NOTA') || panelContent.includes('nota');
         
         if (outcome === 'ok') {
           results[session.id] = { 
@@ -184,18 +174,8 @@ test.describe('CopyMaster AI - Ciclo de Verificação por Sessão', () => {
       for (const [session, result] of failedSessions) {
         console.log(`\n--- Re-testando: ${session} ---`);
         // Find and click the tab again
-        const tabFound = await (async () => {
-          const tabCount = await page.getByRole('tab').count();
-          for (let j = 0; j < tabCount; j++) {
-            const tabText = await page.getByRole('tab').nth(j).textContent();
-            if (tabText?.trim().toLowerCase().includes(session.toLowerCase())) {
-              await page.getByRole('tab', { name: new RegExp(session, 'i') }).click();
-              await page.waitForTimeout(800);
-              return true;
-            }
-          }
-          return false;
-        })();
+        const tabFound = await clickSessionTab(page, session);
+        if (tabFound) await page.waitForTimeout(800);
         
         if (tabFound) {
           // Wait for panel
@@ -229,9 +209,9 @@ test.describe('CopyMaster AI - Ciclo de Verificação por Sessão', () => {
               }
             }
             
-            const panelContent = await page.locator('[role="tabpanel"][aria-hidden="false"]').first().textContent();
-            const hasDivider = panelContent?.includes('|||') || false;
-            const hasNota = panelContent?.includes('NOTA') || false || panelContent?.includes('nota') || false;
+            const panelContent = await activePanelText(page);
+            const hasDivider = panelContent.includes('|||');
+            const hasNota = panelContent.includes('NOTA') || panelContent.includes('nota');
             
             if (outcome === 'ok') {
               results[session] = { passed: true, details: `OK (re-teste) - ${waitTime}ms | divisor: ${hasDivider} | nota: ${hasNota}` };

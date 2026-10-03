@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { activePanelText } from './helpers/sessionTabs';
 
 // Geração :free é flaky por throughput externo (provado: 170–360s p/ corpos grandes).
 // Retry cobre a variância do tier gratuito sem mascarar bug de app (erros de app falham determinístico).
@@ -17,7 +18,9 @@ test('usuario: home hero + todas ferramentas listadas', async ({ page }) => {
   expect(errors, JSON.stringify(errors.slice(0,3))).toEqual([]);
 });
 
-test('usuario: navega 26 sessoes via sidebar sem quebrar', async ({ page }) => {
+test('usuario: navega 50 sessoes via sidebar sem quebrar', async ({ page }) => {
+  // 50 tabs × (click + 1500ms) + lazy chunks + wallet/settings ≈ 90s+.
+  test.setTimeout(240000);
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(String(e).slice(0,200)));
   // SettingsCenter sonda http://localhost:20128 (9Router opcional); com ele offline o
@@ -28,29 +31,32 @@ test('usuario: navega 26 sessoes via sidebar sem quebrar', async ({ page }) => {
   await page.waitForTimeout(900);
   await expect(page.locator('input[placeholder*="consultoria"]').first()).toBeVisible({ timeout: 10000 });
 
-  // 27 tabs no sidebar (wallet/settings sao botoes, nao tabs)
+  // 50 tabs no sidebar (wallet/settings sao botoes, nao tabs)
   const tabs = page.getByRole('tab');
   const n = await tabs.count();
-  expect(n, 'sidebar tabs').toBeGreaterThanOrEqual(27);
+  expect(n, 'sidebar tabs').toBeGreaterThanOrEqual(50);
   for (let i=0;i<n;i++) {
     await tabs.nth(i).click();
     // Aguarda o painel visível (keep-alive: display:none → display:block)
     await page.waitForTimeout(1500);
     // Escopar asserts ao painel visível — o App.tsx usa keep-alive com
-    // display:block/none + aria-hidden. Ler apenas o painel ativo (role=tabpanel + aria-hidden=false).
-    const activePanel = page.locator('[role="tabpanel"][aria-hidden="false"]').first();
-    const panelText = ((await activePanel.textContent())||'').trim();
-    expect(panelText.length, `sessao ${i} em branco`).toBeGreaterThan(150);
+    // display:block/none nos FILHOS do role=tabpanel; o aria-hidden="false"
+    // fica neles, nunca no contêiner (ver basic-flow.spec.ts).
+    const panelText = await activePanelText(page);
+    // 50 = anti-vazio (Personas em estado inicial tem ~86 chars com UI real).
+    expect(panelText.length, `sessao ${i} em branco`).toBeGreaterThan(50);
     expect(await page.locator('text=Algo deu errado').count(), `sessao ${i} error boundary`).toBe(0);
   }
   // wallet + settings via botoes inferiores
   await page.getByRole('button', { name: /carteira tokens/i }).click();
   await page.waitForTimeout(1500);
-  const walletPanel = page.locator('[role="tabpanel"][aria-hidden="false"]').first();
-  expect((((await walletPanel.textContent())||'').trim().length)).toBeGreaterThan(150);
+  const walletPanelText = await activePanelText(page);
+  expect(walletPanelText.length).toBeGreaterThan(150);
   await page.getByRole('button', { name: /configura/i }).click();
   await page.waitForTimeout(1500);
-  await expect(page.locator('text=OpenRouter :free').first()).toBeVisible({ timeout: 8000 });
+  // SettingsCenter redesenhado (auto-seleção V24): a antiga seção
+  // "OpenRouter :free" agora é "Modelos Gratuitos OpenRouter (... na rotação)".
+  await expect(page.getByText(/Modelos Gratuitos OpenRouter/i).first()).toBeVisible({ timeout: 8000 });
   expect(errors, JSON.stringify(errors.slice(0,4))).toEqual([]);
   await page.getByRole('button', { name: /Voltar ao Início/i }).click();
   await expect(page.getByRole('heading', { name: /O Arquiteto da/i })).toBeVisible();

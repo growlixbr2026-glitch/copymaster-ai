@@ -1,8 +1,9 @@
 import { test, expect, Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { clickSessionTab } from './helpers/sessionTabs';
 
-// Teste geral como usuário: camada 1 (navegação sem quota, todas as 27) +
+// Teste geral como usuário: camada 1 (navegação sem quota, todas as 50) +
 // camada 2 (lote crítico de 8 sessões com geração real, timeout curto).
 // Quota :free é flaky: timeout/quota viram `skip` com motivo, nunca falha muda.
 // Geração :free pode ser lenta: retries cobrem flake de rede, não bug de app.
@@ -45,38 +46,63 @@ async function openSala(page: Page) {
   await expect(page.locator('input[placeholder*="consultoria"]').first()).toBeVisible({ timeout: 10000 });
 }
 
-// Índice da NavItem na sidebar (ordem do App.tsx) -> id da sessão.
-const TABS: { idx: number; id: string }[] = [
-  { idx: 0, id: 'ideas' },
-  { idx: 1, id: 'copy' },
-  { idx: 2, id: 'notebook' },
-  { idx: 3, id: 'personas' },
-  { idx: 4, id: 'email' },
-  { idx: 5, id: 'vsl' },
-  { idx: 6, id: 'lp' },
-  { idx: 7, id: 'ads' },
-  { idx: 8, id: 'sexy' },
-  { idx: 9, id: 'tiktok' },
-  { idx: 10, id: 'reels' },
-  { idx: 11, id: 'youtube' },
-  { idx: 12, id: 'logo' },
-  { idx: 13, id: 'carousel' },
-  { idx: 14, id: 'magazine' },
-  { idx: 15, id: 'quote' },
-  { idx: 16, id: 'citation' },
-  { idx: 17, id: 'lettering' },
-  { idx: 18, id: 'comic' },
-  { idx: 19, id: 'adultAnimation' },
-  { idx: 20, id: 'meme' },
-  { idx: 21, id: 'infographic' },
-  { idx: 22, id: 'article' },
-  { idx: 23, id: 'ppt' },
-  { idx: 24, id: 'media' },
-  { idx: 25, id: 'inspiration' },
-  { idx: 26, id: 'stress' },
+// Ids das 50 sessões da sidebar (wallet/settings são botões, não tabs).
+// Localização por id OU rótulo PT via helpers/sessionTabs — índice numérico
+// quebrava a cada sessão nova (PRD em 2026-09-27 deslocou tudo em +1).
+const TABS: string[] = [
+  'ideas',
+  'copy',
+  'notebook',
+  'personas',
+  'prd',
+  'email',
+  'vsl',
+  'lp',
+  'ads',
+  'sexy',
+  'tiktok',
+  'reels',
+  'youtube',
+  'logo',
+  'carousel',
+  'magazine',
+  'quote',
+  'citation',
+  'lettering',
+  'comic',
+  'adultAnimation',
+  'meme',
+  'infographic',
+  'article',
+  'ppt',
+  'media',
+  'inspiration',
+  'seoAudit',
+  'keywords',
+  'contentBrief',
+  'competitor',
+  'outreach',
+  'leadMagnet',
+  'launch',
+  'churn',
+  'pmf',
+  'flywheel',
+  'partnerships',
+  'channelEconomics',
+  'revops',
+  'pricing',
+  'coldEmail',
+  'battleCard',
+  'enablement',
+  'dealDesk',
+  'aePrep',
+  'salesEngineer',
+  'customerSuccess',
+  'salesOps',
+  'stress',
 ];
 
-test('camada 1: navegar 27 sessoes sem quota, medir resposta UI', async ({ page }) => {
+test('camada 1: navegar 50 sessoes sem quota, medir resposta UI', async ({ page }) => {
   test.setTimeout(180000);
   try {
     fs.mkdirSync(path.dirname(REPORT_JSON), { recursive: true });
@@ -87,14 +113,11 @@ test('camada 1: navegar 27 sessoes sem quota, medir resposta UI', async ({ page 
   await openSala(page);
   const tabs = page.getByRole('tab');
   const n = await tabs.count();
-  expect(n, 'sidebar tabs').toBeGreaterThanOrEqual(27);
-  for (const { idx, id } of TABS) {
-    if (idx >= n) {
-      push({ sessao: id, camada: 'navegacao', tempoMs: 0, status: 'skip', detalhe: 'tab fora do índice', outputChars: 0 });
-      continue;
-    }
+  expect(n, 'sidebar tabs').toBeGreaterThanOrEqual(50);
+  for (const id of TABS) {
     const t0 = Date.now();
-    await tabs.nth(idx).click();
+    const found = await clickSessionTab(page, id);
+    expect(found, `tab da sessão "${id}" não encontrada na sidebar (drift de rótulo?)`).toBeTruthy();
     await page.waitForTimeout(700);
     const dt = Date.now() - t0;
     const len = (((await page.locator('#root').textContent()) || '').trim().length);
@@ -109,15 +132,15 @@ test('camada 1: navegar 27 sessoes sem quota, medir resposta UI', async ({ page 
 });
 
 // Lote crítico: botão de gerar por sessão (PT) + verificador de sucesso.
-const BATCH: { id: string; tabIdx: number; btn: RegExp; fillInputs: boolean; success: RegExp[] }[] = [
-  { id: 'ideas', tabIdx: 0, btn: /gerar estratégia/i, fillInputs: true, success: [/pesquisa instantânea/i] },
-  { id: 'copy', tabIdx: 1, btn: /executar comando/i, fillInputs: true, success: [/variação 1/i] },
-  { id: 'email', tabIdx: 4, btn: /escrever sequência/i, fillInputs: true, success: [/email 1/i] },
-  { id: 'vsl', tabIdx: 5, btn: /criar vsl/i, fillInputs: true, success: [/nota do estrategista/i] },
-  { id: 'ads', tabIdx: 7, btn: /criar anúncios/i, fillInputs: true, success: [/variação|opção 1|nota do estrategista/i] },
-  { id: 'youtube', tabIdx: 11, btn: /executar comando/i, fillInputs: true, success: [/roteiro|título|nota do estrategista/i] },
-  { id: 'carousel', tabIdx: 13, btn: /criar narrativa visual/i, fillInputs: true, success: [/slide|lâmina|nota do estrategista/i] },
-  { id: 'article', tabIdx: 22, btn: /escrever artigo/i, fillInputs: true, success: [/nota do estrategista|introdução|conclusão/i] },
+const BATCH: { id: string; btn: RegExp; fillInputs: boolean; success: RegExp[] }[] = [
+  { id: 'ideas', btn: /gerar estratégia/i, fillInputs: true, success: [/pesquisa instantânea/i] },
+  { id: 'copy', btn: /executar comando/i, fillInputs: true, success: [/variação 1/i] },
+  { id: 'email', btn: /escrever sequência/i, fillInputs: true, success: [/email 1/i] },
+  { id: 'vsl', btn: /criar vsl/i, fillInputs: true, success: [/nota do estrategista/i] },
+  { id: 'ads', btn: /criar anúncios/i, fillInputs: true, success: [/variação|opção 1|nota do estrategista/i] },
+  { id: 'youtube', btn: /executar comando/i, fillInputs: true, success: [/roteiro|título|nota do estrategista/i] },
+  { id: 'carousel', btn: /criar narrativa visual/i, fillInputs: true, success: [/slide|lâmina|nota do estrategista/i] },
+  { id: 'article', btn: /escrever artigo/i, fillInputs: true, success: [/nota do estrategista|introdução|conclusão/i] },
 ];
 
 for (const s of BATCH) {
@@ -127,8 +150,8 @@ for (const s of BATCH) {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(String(e).slice(0, 150)));
     await openSala(page);
-    const tabs = page.getByRole('tab');
-    await tabs.nth(s.tabIdx).click();
+    const found = await clickSessionTab(page, s.id);
+    expect(found, `${s.id}: tab não encontrada na sidebar (drift de rótulo?)`).toBeTruthy();
     await page.waitForTimeout(800);
     // Preenche briefing: todos os textareas + inputs de texto visíveis.
     const areas = page.locator('textarea:visible');
@@ -209,7 +232,7 @@ test('relatório geral: tabela sessão × tempo × status', async () => {
   const byId: Record<string, Row[]> = {};
   for (const r of fileRows) (byId[r.sessao] = byId[r.sessao] || []).push(r);
   const lines = ['# Relatório geral como usuário', '', `Gerado em ${new Date().toISOString()}`, '', '| Sessão | Camada | Tempo | Status | Detalhe | Output |', '|---|---|---|---|---|---|'];
-  for (const { id } of TABS) {
+  for (const id of TABS) {
     for (const r of byId[id] || []) {
       lines.push(`| ${r.sessao} | ${r.camada} | ${r.tempoMs}ms | ${r.status} | ${r.detalhe} | ${r.outputChars}c |`);
     }

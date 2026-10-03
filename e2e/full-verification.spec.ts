@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { clickSessionTab, activePanelText } from './helpers/sessionTabs';
 
 const BASE_URL = '/';
 const TEST_NICHE = 'café especial em grãos para baristas';
@@ -143,20 +144,12 @@ test.describe('CopyMaster AI - Verificação Completa 28 Sessões com Chaves Rea
       const targetTab = alphabeticalOrder[sessionIdx];
       console.log(`\n=== Onda ${sessionIdx + 1}: Navegando para sessão ${targetTab} ===`);
       
-      // Find and click the tab
-      const tabs = page.getByRole('tab');
-      const tabCount = await tabs.count();
-      
-      let found = false;
-      for (let i = 0; i < tabCount; i++) {
-        const tabText = await tabs.nth(i).textContent();
-        if (tabText?.trim().toLowerCase() === targetTab.toLowerCase()) {
-          console.log(`Clicando tab: ${targetTab} (índice ${i})`);
-          await tabs.nth(i).click();
-          await page.waitForTimeout(800);
-          found = true;
-          break;
-        }
+      // Find and click the tab (id OU rótulo PT — a igualdade exata contra o
+      // rótulo PT nunca casava: 'copy' !== 'Copywriting Pro').
+      const found = await clickSessionTab(page, targetTab);
+      if (found) {
+        console.log(`Clicando tab: ${targetTab}`);
+        await page.waitForTimeout(800);
       }
       
       if (!found) {
@@ -165,12 +158,10 @@ test.describe('CopyMaster AI - Verificação Completa 28 Sessões com Chaves Rea
         continue;
       }
       
-      // Wait for panel to become visible
+      // Wait for panel to become visible (filho keep-alive com display:block)
       await page.waitForTimeout(1000);
       
-      // Check if panel is visible (keep-alive uses display:none/block)
-      const activePanel = page.locator('[role="tabpanel"][aria-hidden="false"]').first();
-      const panelText = ((await activePanel.textContent()) || '').trim();
+      const panelText = await activePanelText(page);
       
       console.log(`Painel ${targetTab} tem ${panelText.length} chars`);
       
@@ -249,9 +240,9 @@ test.describe('CopyMaster AI - Verificação Completa 28 Sessões com Chaves Rea
           
           if (outcome === 'ok') {
             // Verify output has proper divider
-            const panelContent = await activePanel.textContent();
-            const hasDivider = panelContent?.includes('|||') || false;
-            const hasNote = panelContent?.includes('NOTA') || false;
+            const panelContent = await activePanelText(page);
+            const hasDivider = panelContent.includes('|||');
+            const hasNote = panelContent.includes('NOTA');
             
             results[targetTab] = { 
               passed: true, 
@@ -278,7 +269,7 @@ test.describe('CopyMaster AI - Verificação Completa 28 Sessões com Chaves Rea
             passed: true, 
             details: 'Botão Gerar bloqueado (sem briefing - esperado)' 
           };
-          console.log(`○ ${targetBotão} - botão bloqueado (sem briefing)`);
+          console.log(`○ ${targetTab} - botão bloqueado (sem briefing)`);
         }
       } else {
         // No Generate button found - might be a session that doesn't have it
