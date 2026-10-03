@@ -103,6 +103,7 @@ import { GUIDES_VISUAL } from './guides/visual';
 import { GUIDES_SEO } from './guides/seo';
 import { GUIDES_SALES } from './guides/sales';
 import { GUIDES_GROWTH } from './guides/growth';
+import { GUIDES_ENGAGEMENT } from './guides/engagement';
 
-[...GUIDES_STRATEGY, ...GUIDES_VIDEO, ...GUIDES_VISUAL, ...GUIDES_SEO, ...GUIDES_SALES, ...GUIDES_GROWTH]
+[...GUIDES_STRATEGY, ...GUIDES_VIDEO, ...GUIDES_VISUAL, ...GUIDES_SEO, ...GUIDES_SALES, ...GUIDES_GROWTH, ...GUIDES_ENGAGEMENT]
   .forEach(registerGuide);

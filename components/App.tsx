@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, Suspense, lazy, useMemo } from 'react';
-import { PenTool, Flame, ImagePlus, Youtube, Menu, X, Link2, GalleryHorizontal, BookOpen, PieChart, Quote, Newspaper, Settings, Wallet, Video, Instagram, Globe, MonitorPlay, Users, Mail, Play, LayoutTemplate, Megaphone, Type as TypeIcon, Notebook, Smile, Tv, Lightbulb, Sparkles, AlertTriangle, Palette, Moon, Sun, Paintbrush, Home, Stethoscope, FileText, TrendingUp, Swords, Send, BarChart2, DollarSign, Target, Briefcase, Wrench, UserMinus, Magnet, Rocket, TrendingDown, Map, RefreshCw, HeartHandshake } from 'lucide-react';
+import { PenTool, Flame, ImagePlus, Youtube, Menu, X, Link2, GalleryHorizontal, BookOpen, PieChart, Quote, Newspaper, Settings, Wallet, Video, Instagram, Globe, MonitorPlay, Users, Mail, Play, LayoutTemplate, Megaphone, Type as TypeIcon, Notebook, Smile, Tv, Lightbulb, Sparkles, AlertTriangle, Palette, Moon, Sun, Paintbrush, Home, Stethoscope, FileText, TrendingUp, Swords, Send, BarChart2, DollarSign, Target, Briefcase, Wrench, UserMinus, Magnet, Rocket, TrendingDown, Map, RefreshCw, HeartHandshake, MessageSquare } from 'lucide-react';
 import { GLOBAL_LANGUAGES } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import { SharedContextProvider, useSharedContext } from '../contexts/SharedContext';
@@ -63,6 +63,7 @@ const PMFCanvasStudio = lazy(() => import('./PMFCanvasStudio'));
 const GrowthFlywheelStudio = lazy(() => import('./GrowthFlywheelStudio'));
 const PartnershipsStudio = lazy(() => import('./PartnershipsStudio'));
 const ChannelEconomicsStudio = lazy(() => import('./ChannelEconomicsStudio'));
+const CommentResponder = lazy(() => import('./CommentResponder'));
 
 
 // --- ENGINE OPTIMIZATION: External Component ---
@@ -263,6 +264,7 @@ const AppContent: React.FC = () => {
     'contentBrief': <ContentBriefStudio language={language} />,
     'competitor': <CompetitorStudio language={language} />,
     'outreach': <OutreachStudio language={language} />,
+    'commentResponder': <CommentResponder language={language} />,
     'revops': <RevOpsBriefStudio language={language} />,
     'pricing': <PricingStrategyStudio language={language} />,
     'coldEmail': <ColdEmailStudio language={language} />,
@@ -383,6 +385,12 @@ const AppContent: React.FC = () => {
                     <NavItem id="tiktok" label={t('nav_tiktok')} icon={Video} colorClass="text-fuchsia-400" activeTab={activeTab} onClick={handleNavClick} />
                     <NavItem id="reels" label={t('nav_reels')} icon={Instagram} colorClass="text-pink-500" activeTab={activeTab} onClick={handleNavClick} />
                     <NavItem id="youtube" label={t('nav_youtube')} icon={Youtube} colorClass="text-red-400" activeTab={activeTab} onClick={handleNavClick} />
+                </div>
+            </div>
+            <div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Engajamento</div>
+                <div className="space-y-1">
+                    <NavItem id="commentResponder" label={t('nav_commentResponder')} icon={MessageSquare} colorClass="text-amber-400" activeTab={activeTab} onClick={handleNavClick} isNew={true} />
                 </div>
             </div>
             <div>

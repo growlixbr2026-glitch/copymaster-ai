@@ -44,6 +44,7 @@ import { generateKeywordService } from '../strategy/keywords';
 import { generateContentBriefService } from '../strategy/contentBrief';
 import { generateCompetitorService } from '../strategy/competitor';
 import { generateOutreachService } from '../copy/outreach';
+import { generateCommentResponseService } from '../social/commentResponder';
 
 export interface AuditCriterion {
     id: string;
@@ -646,6 +647,22 @@ const MODULES: Record<string, ModuleDef> = {
             sharedHasContent(80, 20),
             sharedNoGreeting(15),
             checkLen(100, 15, 'CORPO'),
+            sharedNoNoteLeak(10),
+        ],
+    },
+    commentResponder: {
+        label: 'Responder Comentários', category: 'Engajamento',
+        expectedPurpose: 'Variações de resposta contextual separadas por COMMENT_DIVIDER + Nota do Estrategista isolada.',
+        run: async (language) => {
+            const r = await generateCommentResponseService({ mode: 'post', platform: 'LinkedIn (Perfil Pessoal)', objective: 'autoridade', tone: 'Direto', length: 'medio', variations: 3, context: CTX, language });
+            return { raw: (r as any).text || '', error: (r as any).error };
+        },
+        checks: [
+            sharedMarker(MARK, 25, 'fonte'),
+            { id: 'dual_dividers', label: 'DIVISORES EXATOS (COMMENT+NOTA)', impact: 25, run: ({ raw }: { raw: string }) => { const ok = raw.includes('|||COMMENT_DIVIDER|||') && raw.includes('|||NOTA_DIVIDER|||'); return { passed: ok, details: ok ? 'COMMENT_DIVIDER e NOTA_DIVIDER presentes e exatos.' : 'Falta COMMENT_DIVIDER ou NOTA_DIVIDER.' }; } },
+            sharedHasContent(80, 15),
+            sharedNoGreeting(15),
+            checkLen(100, 10, 'CORPO'),
             sharedNoNoteLeak(10),
         ],
     },

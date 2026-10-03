@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { clickSessionTab } from './helpers/sessionTabs';
 
-// Teste geral como usuário: camada 1 (navegação sem quota, todas as 50) +
+// Camada 1 (navegação sem quota, todas as 51) +
 // camada 2 (lote crítico de 8 sessões com geração real, timeout curto).
 // Quota :free é flaky: timeout/quota viram `skip` com motivo, nunca falha muda.
 // Geração :free pode ser lenta: retries cobrem flake de rede, não bug de app.
@@ -46,7 +46,7 @@ async function openSala(page: Page) {
   await expect(page.locator('input[placeholder*="consultoria"]').first()).toBeVisible({ timeout: 10000 });
 }
 
-// Ids das 50 sessões da sidebar (wallet/settings são botões, não tabs).
+// Ids das 51 sessões da sidebar (wallet/settings são botões, não tabs).
 // Localização por id OU rótulo PT via helpers/sessionTabs — índice numérico
 // quebrava a cada sessão nova (PRD em 2026-09-27 deslocou tudo em +1).
 const TABS: string[] = [
@@ -82,6 +82,7 @@ const TABS: string[] = [
   'contentBrief',
   'competitor',
   'outreach',
+  'commentResponder',
   'leadMagnet',
   'launch',
   'churn',
@@ -102,7 +103,7 @@ const TABS: string[] = [
   'stress',
 ];
 
-test('camada 1: navegar 50 sessoes sem quota, medir resposta UI', async ({ page }) => {
+test('camada 1: navegar 51 sessoes sem quota, medir resposta UI', async ({ page }) => {
   test.setTimeout(180000);
   try {
     fs.mkdirSync(path.dirname(REPORT_JSON), { recursive: true });

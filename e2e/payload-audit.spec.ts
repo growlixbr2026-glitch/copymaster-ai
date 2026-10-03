@@ -94,6 +94,7 @@ const SESSIONS: Array<{ id: string; label: RegExp }> = [
   { id: 'ppt', label: /apresenta|pitch/i },
   { id: 'media', label: /media/i },
   { id: 'inspiration', label: /inspira/i },
+  { id: 'commentResponder', label: /coment/i },
 ];
 
 async function runSession(page: any, s: { id: string; label: RegExp }, payloads: string[]) {

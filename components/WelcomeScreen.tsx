@@ -59,6 +59,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNavigate, language }) =
       ]
     },
     {
+      title: "Engajamento & Autoridade",
+      subtitle: "Respostas que transformam comentário em autoridade real.",
+      color: "from-amber-500/20 to-yellow-500/20", border: "border-amber-500/30", iconColor: "text-amber-400",
+      tools: [
+        { id: 'commentResponder', icon: MessageSquare, label: "Responder Comentários", desc: "Postagem, artigo, imagem ou comentário vira 3 respostas contextuais com fórmula ouro: ponto específico + valor novo + pergunta aberta." },
+      ]
+    },
+    {
       title: "Engenharia Visual & Design",
       subtitle: "Design de autoridade que comunica poder instantâneo.",
       color: "from-fuchsia-500/20 to-blue-500/20", border: "border-fuchsia-500/30", iconColor: "text-fuchsia-400",

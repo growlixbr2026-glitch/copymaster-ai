@@ -47,6 +47,7 @@ export const TAB_LABELS: Record<string, string> = {
   contentBrief: 'Content Brief',
   competitor: 'Competitor Analysis',
   outreach: 'Sales Outreach',
+  commentResponder: 'Responder Comentários',
   leadMagnet: 'Lead Magnet',
   launch: 'Launch Plan',
   churn: 'Churn Prevention',

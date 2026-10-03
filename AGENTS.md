@@ -16,7 +16,7 @@ login, cobranÃ§a, multiusuÃ¡rio), mas com **functions serverless sem estado 
 (`/api/env`, `/api/research`, `/api/pin`, `/api/scrape` e o **proxy `/api/ai`** â€”
 ver Â§9) que existem para pesquisa e para manter as chaves LLM fora do bundle (H1).
 
-O usuÃ¡rio escolhe uma das **50 sessÃµes**, preenche
+O usuÃ¡rio escolhe uma das **51 sessÃµes**, preenche
 seletores/briefing e recebe **texto pronto para copiar e colar** ou **prompt
 tÃ©cnico em inglÃªs para gerar imagens em outra IA** (Midjourney, DALL-E, etc.).
 
@@ -67,7 +67,7 @@ npx playwright test --project=chromium            # suÃ­te completa
 npx playwright test e2e/smoke.spec.ts e2e/qa-core.spec.ts  # sem gastar quota
 ```
 NÃ£o existe script `test` no package.json. Specs em `e2e/`:
-permanentes `smoke.spec.ts`, `qa-core.spec.ts`, `user-full.spec.ts` (2 geraÃ§Ãµes reais) + mock `full-user.spec.ts`/`full-user-simple.spec.ts` (`ZAFRA-42`, 0 quota, 16 testes) + `payload-audit.spec.ts` (prova seletorâ†’prompt nas 28 sessÃµes via payload real + mock, 0 quota) + auxiliares `mx-live.spec.ts`, `general-user.spec.ts`, `real-dentista.spec.ts` (harness/manuais).
+permanentes `smoke.spec.ts`, `qa-core.spec.ts`, `user-full.spec.ts` (2 geraÃ§Ãµes reais) + mock `full-user.spec.ts`/`full-user-simple.spec.ts` (`ZAFRA-42`, 0 quota, 16 testes) + `payload-audit.spec.ts` (prova seletorâ†’prompt nas 29 sessÃµes via payload real + mock, 0 quota) + auxiliares `mx-live.spec.ts`, `general-user.spec.ts`, `real-dentista.spec.ts` (harness/manuais).
 
 ### Gerar seu primeiro conteÃºdo
 1. `npm run dev` â†’ abre `http://localhost:5173` â†’ tela `home` (`WelcomeScreen`).
@@ -87,7 +87,7 @@ permanentes `smoke.spec.ts`, `qa-core.spec.ts`, `user-full.spec.ts` (2 geraÃ§�
 
 ```
 index.tsx (ErrorBoundary + MemoryProvider + ThemeProvider)
-â””â”€â”€ components/App.tsx (50 tabs + wallet/settings + home, lazy + visitedTabs keep-alive)
+â””â”€â”€ components/App.tsx (51 tabs + wallet/settings + home, lazy + visitedTabs keep-alive)
     â”œâ”€â”€ contexts/SharedContext  (activeTab, sharedContext/cÃ©rebro, globalError)
     â”œâ”€â”€ contexts/ThemeContext   (normal/write/color)
     â”œâ”€â”€ contexts/MemoryContext  (histÃ³rico de uso)
@@ -103,9 +103,9 @@ tem chave nenhuma: o `callAI` POSTa `{provider,url,body}` no proxy server-side
 `/api/ai`, que injeta a autenticaÃ§Ã£o (ver Â§9 "Proxy `/api/ai`").
 
 ### Como o App monta as tabs
-- `components/App.tsx:12-65`: 54 `lazy()` (50 sessÃµes + wallet/settings + home +
+- `components/App.tsx:12-66`: 55 `lazy()` (51 sessÃµes + wallet/settings + home +
   modal). `components = useMemo(..., [language])` recria ao trocar idioma;
-  o mapa `components` em si tem **52 entradas** (50 sessÃµes + settings + wallet â€”
+  o mapa `components` em si tem **53 entradas** (51 sessÃµes + settings + wallet â€”
   `home`/modal ficam fora e sÃ£o renderizados Ã  parte).
 - `activeTab` vive em `SharedContext`; `visitedTabs:Set(['home'])` + `useEffect`
   adiciona cada visita. Render: `Object.entries(components).map` com
@@ -120,8 +120,9 @@ tem chave nenhuma: o `callAI` POSTa `{provider,url,body}` no proxy server-side
   `aria-hidden` na home (e o skip-link/sidebar/hamburger sÃ£o omitidos ali),
   enquanto os painÃ©is ficam montados por baixo. `QuotaErrorModal` (z-50) continua
   acima do overlay e agora **tambÃ©m Ã© alcanÃ§Ã¡vel na home**.
-- Sidebar `App.tsx:314-366` (`nav[role=tablist]` em `:319`): 6 grupos (EstratÃ©gia & Core 4, Vendas 5, VÃ­deo 3,
-  Visual & Design 10, Geral & MÃ­dia 4, Sistema 1). `wallet/settings` sÃ£o botÃµes
+- Sidebar `App.tsx:360-463` (`nav[role=tablist]` em `:360`): 10 grupos (EstratÃ©gia & Core 5, Vendas & ConversÃ£o 5, VÃ­deo Social 3,
+  Engajamento 1, Visual & Design 10, Geral & MÃ­dia 4, Marketing AvanÃ§ado 5,
+  Growth & MVP 7, RevOps & B2B 10, Sistema 1). `wallet/settings` sÃ£o botÃµes
   no rodapÃ©, nÃ£o tabs. `UsageIndicator` (poll 15s) mostra `Uso {provider} %`.
 - `home` (`WelcomeScreen`) Ã© full-screen; demais tabs tÃªm layout
   `aside + main[role=tabpanel]`. `globalError` abre `QuotaErrorModal` com a
@@ -231,7 +232,7 @@ ConteÃºdo e nota NUNCA se misturam na mesma string; o separador Ã© textual:
 |---|---|
 | `\|\|\|DIVIDER\|\|\|` | 2 variaÃ§Ãµes (copy) |
 | `\|\|\|NOTA_DIVIDER\|\|\|` | separa entregÃ¡vel da Nota (quase todas) |
-| `\|\|\|EMAIL_DIVIDER\|\|\|` / `\|\|\|ADS_DIVIDER\|\|\|` / `\|\|\|SLIDE_DIVIDER\|\|\|` / `\|\|\|QUOTE_DIVIDER\|\|\|` / `\|\|\|CITATION_DIVIDER\|\|\|` / `\|\|\|LETTERING_DIVIDER\|\|\|` / `\|\|\|MEME_DIVIDER\|\|\|` / `\|\|\|INSP_DIVIDER\|\|\|` / `\|\|\|LOGO_OPTION_DIVIDER\|\|\|` / `\|\|\|YT_OPTION_DIVIDER\|\|\|` / `\|\|\|SCENE_DIVIDER\|\|\|` / `\|\|\|SCHEMA_DIVIDER\|\|\|` (JSON-LD) / `\|\|\|PRD_DIVIDER\|\|\|` (PRDâ†”tokens) | separadores por sessÃ£o |
+| `\|\|\|EMAIL_DIVIDER\|\|\|` / `\|\|\|ADS_DIVIDER\|\|\|` / `\|\|\|SLIDE_DIVIDER\|\|\|` / `\|\|\|QUOTE_DIVIDER\|\|\|` / `\|\|\|CITATION_DIVIDER\|\|\|` / `\|\|\|LETTERING_DIVIDER\|\|\|` / `\|\|\|MEME_DIVIDER\|\|\|` / `\|\|\|INSP_DIVIDER\|\|\|` / `\|\|\|LOGO_OPTION_DIVIDER\|\|\|` / `\|\|\|YT_OPTION_DIVIDER\|\|\|` / `\|\|\|SCENE_DIVIDER\|\|\|` / `\|\|\|SCHEMA_DIVIDER\|\|\|` (JSON-LD) / `\|\|\|PRD_DIVIDER\|\|\|` (PRDâ†”tokens) / `\|\|\|COMMENT_DIVIDER\|\|\|` (variações de resposta a comentários) | separadores por sessÃ£o |
 
 Regras ao escrever prompts: divisor **sempre em linha prÃ³pria, exato,
 nunca quebrado em linhas**, nunca repetir placeholders (`[CONTEÃšDO...]`) nem
@@ -272,7 +273,7 @@ isso os parsers usam `splitVisualResult()` / `splitOptions()` (tolerantes a
   tudo", TTS e atalhos **F1/Esc** (registro global em módulo: UMA instância
   aberta por vez, F1 abre a da sessão visível â€” keep-alive multi-painel);
   sem guia, cai na `description` legada + aviso "Guia detalhado em construção".
-  Guias em `data/guides/*.ts` (6 arquivos, 50 sessões PT-BR), schema
+  Guias em `data/guides/*.ts` (7 arquivos, 51 sessões PT-BR), schema
   `SessionGuide` + `registerGuide/getGuide` em `data/guides.ts` (re-exportado
   por `constants.ts` com `export type`); `sessionId` vem de `ToolLayout` e
   `BridgeConfig`. Spec `guide-modal` (4 testes, 0 quota).
@@ -366,7 +367,7 @@ isso os parsers usam `splitVisualResult()` / `splitOptions()` (tolerantes a
 
 ---
 
-## 4. As 50 sessões (contrato completo)
+## 4. As 51 sessões (contrato completo)
 
 Legenda: **T** = badge Texto (copiar e colar) Â· **I** = badge Prompt imagem
 (prompt EN p/ outra IA). `S` = serviÃ§o, `C` = componente.
@@ -556,14 +557,14 @@ BADGE / EXEMPLO / BLOQUEIOS.
     OUT: PRD.md PT-BR P0-P2 + `|||PRD_DIVIDER|||** (tokens.json) + `|||NOTA_DIVIDER|||` (decisÃµes + `[ASSUNÃ‡Ã•ES]` + riscos); abas `PRD/Tokens` + `Exportar p/ Centro` (alimenta Landing tech). Bloqueio vazio no botÃ£o.
     EXEMPLO: IN `Studio Lume + estÃ©tica premium + linear.app` â†’ OUT PRD PT-BR + tokens hex + nota.
 28. **Auditoria V46** â€" `C StressDiagnostic` / `S tools/diagnostic.runStressTestService(modId, language, mode)`. Ferramenta sistema (sem badge).
-    46 mÃ³dulos no cÃ³digo (`ideas,copy,notebook,personas,email,vsl,lp,ads,sexy,tiktok,reels,youtube,carousel,logo,magazine,quote,citation,lettering,comic,meme,infographic,article,ppt,prd,revops,pricing,coldEmail,battleCard,enablement,dealDesk,aePrep,salesEngineer,customerSuccess,salesOps,leadMagnet,launch,churn,pmf,flywheel,partnerships,channelEconomics,seoAudit,keywords,contentBrief,competitor,outreach`)
+    47 mÃ³dulos no cÃ³digo (`ideas,copy,notebook,personas,email,vsl,lp,ads,sexy,tiktok,reels,youtube,carousel,logo,magazine,quote,citation,lettering,comic,meme,infographic,article,ppt,prd,revops,pricing,coldEmail,battleCard,enablement,dealDesk,aePrep,salesEngineer,customerSuccess,salesOps,leadMagnet,launch,churn,pmf,flywheel,partnerships,channelEconomics,seoAudit,keywords,contentBrief,competitor,outreach,commentResponder`)
     executam o **serviÃ§o real** com briefing-marcador (`ZAFRA-42`, CafÃ© ZAFRA-42
     p/ baristas) e asserts determinÃ­sticos (sem saudaÃ§Ã£o 40c, divisor exacto,
     marcador do seletor case/acento-insensÃ­vel, nota isolada, corpo mÃ­nimo).
     Fora do harness: Media (matriz + SCENE), InspiraÃ§Ã£o (pode bloquear),
     AnimaÃ§Ã£o Adulta e a prÃ³pria Auditoria (recursÃ£o). O rÃ³tulo Ã© dinÃ¢mico
-    (`V{AUDIT_MODULE_IDS.length}` no cabeÃ§alho; histÃ³rico: V23=23, V24=24, V46=46).
-    Modos: **rÃ¡pida** (46 chamadas) / **completa** (+juiz LLM = 92,
+    (`V{AUDIT_MODULE_IDS.length}` no cabeÃ§alho; histÃ³rico: V23=23, V24=24, V46=46, V47=47).
+    Modos: **rÃ¡pida** (47 chamadas) / **completa** (+juiz LLM = 94,
     `det*0,7 + juiz*0,3`). BotÃ£o "Re-testar Reprovados" (honesto; sem placebo).
     OUT: dashboard compliance + cards por categoria + modal `Inspecionar RAW`.
 
@@ -588,6 +589,32 @@ BADGE / EXEMPLO / BLOQUEIOS.
     INPUTS: `valueProposition` (obrigatÃ³rio), `recipientName`, `recipientCompany`, `recipientRole`, `channel` (email/linkedin/phone), `tone` (consultivo/direto/personalizado/familiar), `sequenceLength` (1/3/5).
     OUT: sequÃªncia de mensagens com `|||EMAIL_DIVIDER|||` + `|||NOTA_DIVIDER|||`.
     Bloqueio: sem proposta de valor.
+
+### Engajamento (nova categoria 2026-10-02)
+51. **Responder Comentários** — `C CommentResponder` / `S social/commentResponder.generateCommentResponseService({mode, platform, objective, tone, length, variations, context, extra, language})`. **T**.
+    PARA QUE SERVE: virar FONTE (postagem colada, artigo/URL copiado, imagem ou
+    PDF da postagem — ou o comentário recebido) em respostas contextuais de
+    autoridade: 1-3 variações com a fórmula ouro da pesquisa de engajamento
+    2026 (reforçar ponto específico + acrescentar valor novo + pergunta aberta),
+    nunca "obrigado!" genérico.
+    QUANDO USAR: comentar posts de líderes do nicho (modo `post` = deixar
+    comentário NA postagem de terceiro) e responder o que chegou no seu post
+    (modo `comment` = responder UM comentário recebido — elogio, pergunta,
+    crítica, objeção).
+    INPUTS: `mode` (post|comment), `sourceType` (text|image|pdf — imagem/PDF
+    passam por `analyzeImageContextService`/`analyzePdfContextService` e só os
+    fatos viram fonte), `context`* (fonte obrigatória), `platform` (rede —
+    define janela de resposta: X=minutos, LinkedIn=1ª hora, YouTube=dias),
+    `objective` (autoridade/engajar/adicionar-valor/concordar-e-ampliar/
+    contra-argumentar/pergunta-aberta/agradecer-e-conversa/vender-sutil),
+    `tone`, `length` (curto|medio|longo), `variations` (1-3), `extra`.
+    OUT: **N variações texto puro** `|||COMMENT_DIVIDER|||` (1 variação =
+    sem divisor) + `|||NOTA_DIVIDER|||` (tipo da fonte, janela de resposta,
+    personalização, risco). Parser: `splitNotaBlock` + `splitCopyVariants`.
+    Bloqueio vazio no botão (Item 18).
+    EXEMPLO: IN `modo comment + "Isso não funciona na prática..." + Instagram
+    + Discordar com educação` â†’ OUT 2 respostas calmas com contraprova +
+    Nota com risco a evitar.
 
 ### Assinaturas literais dos serviÃ§os (params por sessÃ£o)
 Todos os serviÃ§os seguem `(params: XParams, onChunk?: (text: string) => void)`,
@@ -817,11 +844,11 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
 ## 6. Testes e QA
 - DeterminÃ­sticos (sem quota): `smoke` (21 linhas: `#root`, tÃ­tulo, 1Âº botÃ£o,
   375Ã—667 e 1920Ã—1080), `qa-core` (home sem `pageerror`, Ideas bloqueia
-  nicho vazio, 50 tabs renderizam >200 chars â€” escopar ao visÃ­vel por causa do
+  nicho vazio, 51 tabs renderizam >200 chars â€” escopar ao visÃ­vel por causa do
   keep-alive `display:none`, `AxeBuilder` zero `critical`, falha total providers
   via `route.abort` â†’ `div.bg-red-950` friendly sem `{"object"` + botÃ£o Centro),
   `redteam` (injection/vazio/gigante/URL/duplo-clique/research-down, 0 quota),
-  `i18n` (EN/ES/PT + 50 tabs), `a11y-tabs` (Axe zero critical 6 tabs +
+  `i18n` (EN/ES/PT + 51 tabs), `a11y-tabs` (Axe zero critical 6 tabs +
   skip-link + teclado), `prompt-harvest` (payloads reais â†’ `e2e-evidence/`),
   `server-proxy` (contrato do `/api/ai`: 405/403/400/SSRF/503 sem upstream +
   seam prod ON roteando a geraÃ§Ã£o por `/api/ai` sem auth + seam dev OFF usando
@@ -839,12 +866,12 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
   SuÃ­te determinÃ­stica = essas 20 specs
   (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 101/101.
 - Com quota `:free` (50/dia, reset diÃ¡rio): `user-full` (140 linhas, `retries:1`,
-  hero + â‰¥20 `Acessar MÃ³dulo`, navega 50 tabs + wallet/settings, bloqueios,
+  hero + â‰¥20 `Acessar MÃ³dulo`, navega 51 tabs + wallet/settings, bloqueios,
   2 geraÃ§Ãµes reais â€” Ideas ~40KB/740s polling `Baixar RelatÃ³rio`, Copy 340s
   `VariaÃ§Ã£o 1` â€” erro sempre friendly), `mx-live` (harness manual de visuais com
   log `[MX:tag] LEN STAR DASH DIV PT EN`; nÃ£o Ã© spec permanente), matriz P1
-  (harness Node quando browser trava), auditoria rÃ¡pida (46 chamadas â€” agendar).
-- Helpers de naveÃ§Ã£o live: `e2e/helpers/sessionTabs.ts` â€" localiza tab por **id OU rÃ¡tulo PT** (`TAB_LABELS` das 50 sessÃµes) e lÃª o painel keep-alive visÃ­vel (`activePanelText`: filho de `[role=tabpanel]` com `display:block` + `aria-hidden="false"` â€" nunca o contÃªiner). Usado por `user-full`, `general-user`, `verification-cycle` e `full-verification`. **NÃ£o use Ã­ndice numÃ©rico de tab** (quebra a cada sessÃ£o nova) nem `[role="tabpanel"][aria-hidden="false"]` (nunca casa â€" ver `basic-flow.spec.ts`).
+  (harness Node quando browser trava), auditoria rÃ¡pida (47 chamadas â€" agendar).
+- Helpers de naveÃ§Ã£o live: `e2e/helpers/sessionTabs.ts` â€" localiza tab por **id OU rÃ¡tulo PT** (`TAB_LABELS` das 51 sessÃµes) e lÃª o painel keep-alive visÃ­vel (`activePanelText`: filho de `[role=tabpanel]` com `display:block` + `aria-hidden="false"` â€" nunca o contÃªiner). Usado por `user-full`, `general-user`, `verification-cycle` e `full-verification`. **NÃ£o use Ã­ndice numÃ©rico de tab** (quebra a cada sessÃ£o nova) nem `[role="tabpanel"][aria-hidden="false"]` (nunca casa â€" ver `basic-flow.spec.ts`).
 - PadrÃ£o de spec: briefing mÃ­nimo, asserts de formato (nÃ£o de mÃ©rito), erros
   via `route.abort/fulfill`, `test.setTimeout` generoso (300-740s), workers â‰¤4.
 - Armadilhas conhecidas: painÃ©is keep-alive `display:none` no DOM (escopar
@@ -862,8 +889,8 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
 ## 7. Checklist de mudanÃ§a segura
 1. `npx tsc --noEmit` â†’ `npm run build` â†’ smoke + qa-core.
 2. `npm run doc:check` (ou `python3 scripts/check-anchors.py`) â€” trava
-   docâ†"cÃ³digo: 31 Ã¢ncoras `arquivo:linha` + 3 invariantes (50 tabs,
-   46 mÃ³dulos, divisores). Se falhar, atualize o cÃ³digo ou este arquivo â€"
+   docâ†"cÃ³digo: 31 Ã¢ncoras `arquivo:linha` + 3 invariantes (51 tabs,
+   47 mÃ³dulos, divisores). Se falhar, atualize o cÃ³digo ou este arquivo â€"
    nunca ignore a divergÃªncia.
 3. Mexeu em prompt? Confira divisores exatos em linha prÃ³pria + rode a sessÃ£o.
 4. Mexeu em parse? Confira `stripCopyFormat` + caso sem divisor (fallback).
@@ -1193,7 +1220,7 @@ Para revalidar: `python3 -c "import pathlib; t=pathlib.Path('services/core/aiCli
 - **Nota misturada**: confira `|||NOTA_DIVIDER|||` em linha prÃ³pria + `splitVisualResult`.
 
 ## 13. GlossÃ¡rio rÃ¡pido
-- **SessÃ£o/tab**: 1 das 50 ferramentas (`activeTab`); `wallet/settings/home` nÃ£o contam.
+- **SessÃ£o/tab**: 1 das 51 ferramentas (`activeTab`); `wallet/settings/home` nÃ£o contam.
 - **Badge T/I**: `Texto` (copia-cola) vs `Prompt imagem` (EN p/ outra IA).
 - **Divisor**: marcador textual `|||X_DIVIDER|||` entre entregÃ¡vel/nota/opÃ§Ãµes.
 - **Nota do Estrategista**: janela separada apÃ³s `|||NOTA_DIVIDER|||` (Ãºnico lugar com Markdown).
@@ -1488,7 +1515,31 @@ Para revalidar: `python3 -c "import pathlib; t=pathlib.Path('services/core/aiCli
   smoke+qa-core+server-proxy **17/17**, round-trip live por curl (400
   inválido → gravação → idempotência sem restart → remoção → `.env`
   byte-idêntico ao hash `357EF07F…`).
-- Para vigiar: contagem 50 no tÃ­tulo do Â§4, tabela de divisores completa
-  (13 + NOTA), `AUDIT_MODULE_IDS.length === 46`.
+- Sessão 51 + grupo Engajamento em 2026-10-02 (pesquisa de engajamento/autoridade:
+  fórmula ouro "ponto específico + valor novo + pergunta aberta", Buffer ~2M
+  posts — responder comentário sobe engajamento Threads +42% / LinkedIn +30% /
+  Instagram +21%; janelas X=minutos, LinkedIn=1ª hora, YouTube=dias):
+  **`social/commentResponder.ts`** (novo divisor `|||COMMENT_DIVIDER|||` — 1-3
+  variações, 1 variação emite só NOTA; guard de fonte vazia Item 18; normas
+  por rede + 8 objetivos de autoridade embutidos no prompt) +
+  **`CommentResponder.tsx`** (modos `post`/`comment`, fonte texto/imagem/PDF via
+  `analyzeImageContextService`/`analyzePdfContextService` com corte da Nota,
+  5 seletores, abas por variação, `splitNotaBlock` + `splitCopyVariants`,
+  badge T, guia F1 `sessionId="commentResponder"`). Registro: novo grupo
+  **Engajamento** na sidebar (grupo 7 → 10 totais) + card em
+  `WelcomeScreen.toolGroups` + `nav_commentResponder` (en/pt) + guia em
+  `data/guides/engagement.ts` (7º arquivo). Contratos de contagem viraram
+  **51 sessões / 47 módulos / 14 divisores + NOTA**: `check-anchors.py`
+  (invariantes 51 NavItems + `commentResponder` crítico, 47 módulos, título §4
+  "As 51 sessões", checagem nova de COMMENT_DIVIDER na tabela do §2; âncoras
+  diagnostic `AuditMode` :73 / `MARK` :173 / `AUDIT_MODULE_IDS` :689 /
+  `runStressTestService` :694) e AGENTS.md §0/§1/§2/§4/§6/§7/§13 recalibrados
+  (`App.tsx:12-66` 55 lazy, mapa 53 entradas, sidebar `:360-463` 10 grupos).
+  Auditoria V47 (47 módulos — `commentResponder` no harness com asserts
+  COMMENT_DIVIDER+NOTA exatos e marcador ZAFRA-42 vindo da fonte).
+  Specs: `sessionTabs.TAB_LABELS` + `general-user.TABS` + `payload-audit`
+  (29 sessões) ganharam `commentResponder`.
+- Para vigiar: contagem 51 no tÃ­tulo do Â§4, tabela de divisores completa
+  (14 + NOTA), `AUDIT_MODULE_IDS.length === 47`.
 
 

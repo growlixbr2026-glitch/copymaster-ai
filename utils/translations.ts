@@ -33,6 +33,7 @@ export const translations: Record<string, Record<string, string>> = {
     nav_logo: "Logo Studio",
     nav_inspiration: "Inspiration Studio",
     nav_prd: "PRD Vibe Studio",
+    nav_commentResponder: "Comment Responder",
     
     // Inspiration Studio
     insp_title: "Inspiration Studio",
@@ -430,6 +431,7 @@ export const translations: Record<string, Record<string, string>> = {
     nav_logo: "Logo & Brand Studio",
     nav_inspiration: "Estúdio de Inspiração",
     nav_prd: "PRD Vibe Studio",
+    nav_commentResponder: "Responder Comentários",
 
     // INSPIRATION
     insp_title: "Estúdio de Inspiração",
