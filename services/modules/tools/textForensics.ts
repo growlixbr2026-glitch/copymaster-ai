@@ -79,6 +79,49 @@ export const AI_TELLTALE_SIGNS: { family: string; label: string; patterns: strin
     patterns: ['é possível afirmar', 'pode-se dizer', 'há quem diga', 'de maneira geral', 'em linhas gerais'],
     fix: 'Assine o texto: primeira pessoa ou juízo explícito, com referência cultural concreta quando couber.',
   },
+  // Novas famílias inspiradas no Prompt-Engineering-Guide e brexhq/prompt-engineering
+  {
+    family: 'hedging_academico',
+    label: 'Hedging acadêmico excessivo',
+    patterns: ['é importante notar', 'vale mencionating', 'cabe ressaltating', 'é relevante mencionating', 'convém salientating'],
+    fix: 'Cite o hedging e vá direto ao ponto — o leitor quer informação, não ressalvas.',
+  },
+  {
+    family: 'passiva_construção',
+    label: 'Construção passiva evasiva',
+    patterns: ['é possível observar', 'pode ser verificado', 'foi constatado que', 'nota-se que', 'percebe-se que'],
+    fix: 'Use voz ativa: quem faz o quê. A passiva esconde o agente e enfraquece o texto.',
+  },
+  {
+    family: 'frase_nominal',
+    label: 'Frase nominal sem verbo de ação',
+    patterns: ['uma análise detalhada', 'uma avaliação completa', 'um estudo aprofundado', 'uma investigação minuciosa'],
+    fix: 'Substitua a frase nominal por um verbo de ação: "analisamos", "avaliamos", "estudamos".',
+  },
+  {
+    family: 'conclusão_formulaica',
+    label: 'Conclusão fórmulaica previsível',
+    patterns: ['diante do exposto', 'diante do apresentado', 'diante do exposto', 'em face do exposto', 'diante de todo o exposto'],
+    fix: 'Corte a fórmula e feche com uma ação concreta ou pergunta — nunca com resumo do que já foi dito.',
+  },
+  {
+    family: 'introdução_formulaica',
+    label: 'Introdução fórmulaica previsível',
+    patterns: ['no mundo atual', 'na era digital', 'no cenário contemporâneo', 'no contexto atual', 'na sociedade moderna'],
+    fix: 'Comece com um dado, pergunta ou afirmação forte — nunca com lugar-comum temporal.',
+  },
+  {
+    family: 'exemplo_genérico',
+    label: 'Exemplo genérico sem concretude',
+    patterns: ['por exemplo', 'como por exemplo', 'a título de exemplo', 'para ilustrar', 'como ilustração'],
+    fix: 'Substitua o exemplo genérico por um caso real, nome, número ou situação específica.',
+  },
+  {
+    family: 'transicao_formulaica',
+    label: 'Transição fórmulaica previsível',
+    patterns: ['por outro lado', 'por sua vez', 'nesse sentido', 'nesse contexto', 'a seguir', 'como mencionado'],
+    fix: 'Varie o ritmo: frase curta de impacto seguida de frase longa explicativa.',
+  },
 ];
 
 const SLOP_LEXICO_FIX =

@@ -89,6 +89,61 @@ function typeBoost(t: SourceSnippet['sourceType']): number {
   return 0;
 }
 
+/**
+ * HyDE (Hypothetical Document Embedding) — técnica do Prompt-Engineering-Guide.
+ * Gera um documento hipotético a partir da query para melhorar a recuperação.
+ * Em vez de buscar pela query original, buscamos por um documento que responderia à query.
+ */
+export function generateHypotheticalDocument(query: string, language: string): string {
+  // Simplificação: cria um documento hipotético baseado na query
+  // Em produção, isso seria feito com um LLM
+  const templates: Record<string, string> = {
+    pt: `Este documento aborda ${query}. Apresenta informações detalhadas sobre o tema, incluindo conceitos fundamentais, aplicações práticas e tendências atuais. O conteúdo é estruturado para fornecer uma visão abrangente e atualizada do assunto.`,
+    en: `This document covers ${query}. It presents detailed information on the topic, including fundamental concepts, practical applications, and current trends. The content is structured to provide a comprehensive and up-to-date overview of the subject.`,
+    es: `Este documento aborda ${query}. Presenta información detallada sobre el tema, incluyendo conceptos fundamentales, aplicaciones prácticas y tendencias actuales. El contenido está estructurado para proporcionar una visión completa y actualizada del tema.`,
+  };
+  return templates[language] || templates.pt;
+}
+
+/**
+ * Re-ranking com diversidade — evita resultados muito similares entre si.
+ * Inspirado em técnicas de RAG do Prompt-Engineering-Guide.
+ */
+export function diversifyResults(snippets: SourceSnippet[], maxResults: number = 10): SourceSnippet[] {
+  if (snippets.length <= maxResults) return snippets;
+  
+  const selected: SourceSnippet[] = [];
+  const usedTitles = new Set<string>();
+  
+  // Primeiro: pega os top resultados com títulos diferentes
+  for (const snippet of snippets) {
+    if (selected.length >= maxResults) break;
+    
+    // Normaliza título para comparação
+    const normalizedTitle = snippet.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isDuplicate = Array.from(usedTitles).some(t => 
+      t.includes(normalizedTitle) || normalizedTitle.includes(t)
+    );
+    
+    if (!isDuplicate) {
+      selected.push(snippet);
+      usedTitles.add(normalizedTitle);
+    }
+  }
+  
+  // Se não tem suficientes, preenche com os restantes
+  if (selected.length < maxResults) {
+    for (const snippet of snippets) {
+      if (selected.length >= maxResults) break;
+      if (!selected.includes(snippet)) {
+        selected.push(snippet);
+      }
+    }
+  }
+  
+  return selected;
+}
+
 // Intenção comercial/prospecção/social: teses acadêmicas (SciELO/Crossref/PubMed)
 // quase nunca são aderentes — ex.: "prospecção no LinkedIn" caía em tese de
 // "prospecção tecnológica do concreto". Detecta para despriorizar essas fontes.

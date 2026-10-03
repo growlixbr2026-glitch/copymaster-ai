@@ -302,8 +302,29 @@ export const callAI = async (
         maxTokens?: number,
         /** Interno: impede recursão do modo turbo nas chamadas internas. */
         _noTurbo?: boolean,
+        /** Habilita cache de prompts (padrão: true para chamadas sem schema) */
+        useCache?: boolean,
     }
 ): Promise<{ text: string; error?: string; imageUrl?: string; via?: { provider: string; model: string } }> => {
+    
+    // Cache de prompts — reduz custos e latência para chamadas repetidas
+    // Inspirado em: anthropics/claude-cookbooks (cost_optimization.ipynb)
+    const useCache = config?.useCache !== false && !config?.responseSchema && !config?.tools;
+    if (useCache && typeof window !== 'undefined') {
+        try {
+            const { promptCacheService } = await import('../promptCacheService');
+            const provider = config?.provider || 'openrouter';
+            const model = defaultModel;
+            const cached = promptCacheService.get(prompt, provider, model);
+            if (cached) {
+                // Cache hit — retorna imediatamente sem chamar o LLM
+                onChunk?.(cached);
+                return { text: cached, via: { provider, model } };
+            }
+        } catch {
+            // Cache indisponível — continua sem cache
+        }
+    }
     
     const resolveEnvKey = (p: string): string | null => {
         if (p === 'gemini') return (process.env as any).API_KEY || (process.env as any).GEMINI_API_KEY || (process.env as any).VITE_GEMINI_API_KEY || null;
@@ -719,6 +740,13 @@ export const callAI = async (
                 try { const { setHealth } = routerMod; setHealth('gemini', Date.now() - gStart); } catch {}
                 noteLastVia({ provider: 'gemini', model: gModel });
                 if (onChunk && gText) { try { onChunk(gText); } catch {} }
+                // Armazena no cache para futuras chamadas idênticas
+                if (useCache && gText && typeof window !== 'undefined') {
+                    try {
+                        const { promptCacheService } = await import('../promptCacheService');
+                        promptCacheService.set(prompt, gText, 'gemini', gModel);
+                    } catch {}
+                }
                 return { text: gText, imageUrl: gImage, via: { provider: 'gemini', model: gModel } };
             } catch (e: any) {
                 if (e?.name === 'TimeoutError') {
@@ -912,6 +940,13 @@ export const callAI = async (
             } catch {}
             tryKey = null;
             noteLastVia({ provider: tryProvider, model: useLiteLLMModel });
+            // Armazena no cache para futuras chamadas idênticas
+            if (useCache && outText && typeof window !== 'undefined') {
+                try {
+                    const { promptCacheService } = await import('../promptCacheService');
+                    promptCacheService.set(prompt, outText, tryProvider, useLiteLLMModel);
+                } catch {}
+            }
             return { text: outText, via: { provider: tryProvider, model: useLiteLLMModel } };
         } catch (e: any) {
             const isLocalAbort = e?.name === 'AbortError';
