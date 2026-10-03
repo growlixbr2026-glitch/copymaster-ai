@@ -2,6 +2,10 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
+import { visualizer } from 'rollup-plugin-visualizer';
+import viteCompression from 'vite-plugin-compression';
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const envFilePath = path.resolve((process as any).cwd(), '.env');
 
@@ -272,7 +276,85 @@ export default defineConfig(({ mode, command }) => {
   const poolLists = collectPoolKeys((k) => (env as any)[k] || (process.env as any)[k]);
 
   return {
-    plugins: [react(), envApiPlugin()],
+    plugins: [
+      react(),
+      envApiPlugin(),
+      // Otimização de imagens (Sharp + SVGO) — inspirado em FatehAK/vite-plugin-image-optimizer
+      ViteImageOptimizer({
+        png: { quality: 100 },
+        jpeg: { quality: 100 },
+        jpg: { quality: 100 },
+        webp: { lossless: true },
+        avif: { lossless: true },
+        svg: {
+          multipass: true,
+          plugins: [
+            { name: 'preset-default', params: { overrides: { cleanupNumericValues: false, removeViewBox: false } } },
+            'sortAttrs',
+            { name: 'addAttributesToSVGElement', params: { attributes: [{ xmlns: 'http://www.w3.org/2000/svg' }] } },
+          ],
+        },
+        logStats: true,
+      }),
+      // Compressão Gzip + Brotli — inspirado em vbenjs/vite-plugin-compression
+      viteCompression({
+        verbose: true,
+        threshold: 1025,
+        algorithm: 'gzip',
+        ext: '.gz',
+      }),
+      viteCompression({
+        verbose: true,
+        threshold: 1025,
+        algorithm: 'brotliCompress',
+        ext: '.br',
+      }),
+      // PWA — inspirado em vite-pwa/vite-plugin-pwa
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+        manifest: {
+          name: 'CopyMaster AI',
+          short_name: 'CopyMaster',
+          description: 'AI-powered content creation suite for the Brazilian market',
+          theme_color: '#1e40af',
+          background_color: '#0f172a',
+          display: 'standalone',
+          orientation: 'portrait',
+          scope: '/',
+          start_url: '/',
+          icons: [
+            { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          ],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: { cacheName: 'google-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: { cacheName: 'gstatic-fonts-cache', expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+            },
+          ],
+        },
+        devOptions: { enabled: false },
+      }),
+      // Bundle visualizer — inspirado em btd/rollup-plugin-visualizer
+      visualizer({
+        filename: 'dist/stats.html',
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+        template: 'treemap',
+      }),
+    ],
     resolve: {
       alias: {
         '@': path.resolve((process as any).cwd(), './'),
