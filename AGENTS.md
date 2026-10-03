@@ -265,7 +265,18 @@ isso os parsers usam `splitVisualResult()` / `splitOptions()` (tolerantes a
   Expandir/Encurtar/Simplificar/Emojis, instruÃ§Ã£o custom + meta de caracteres,
   Transformar (pivot por plataforma/metodologia/funil/tom), PDF/TTS/Contexto
   Global/**Copiar**. Detalhes no Â§12.
-- `SectionHelp`, `SpeechInput`, `TextToSpeech`, `VisualPreview`, `ActivePersonaBar`.
+- `SectionHelp` (modal **Guia F1**, `max-w-4xl`): se `sessionId` acha guia
+  registrado (`getGuide`), renderiza acordeão de seções detalhadas (O que é /
+  Resultado / Inputs / Modos-Subsessões / Fluxo / Dicas / Erros / Integrações /
+  Exporta / Limitações / Bloqueios / Exemplos / FAQ) com "Expandir/Recolher
+  tudo", TTS e atalhos **F1/Esc** (registro global em módulo: UMA instância
+  aberta por vez, F1 abre a da sessão visível â€” keep-alive multi-painel);
+  sem guia, cai na `description` legada + aviso "Guia detalhado em construção".
+  Guias em `data/guides/*.ts` (6 arquivos, 50 sessões PT-BR), schema
+  `SessionGuide` + `registerGuide/getGuide` em `data/guides.ts` (re-exportado
+  por `constants.ts` com `export type`); `sessionId` vem de `ToolLayout` e
+  `BridgeConfig`. Spec `guide-modal` (4 testes, 0 quota).
+- `SpeechInput`, `TextToSpeech`, `VisualPreview`, `ActivePersonaBar`.
 
 ---
 
@@ -749,7 +760,7 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
   (multi-seleÃ§Ã£o `openrouter_free_pool` + `lastModel`), cards provider
   (`mainLLMs` 11 + `otherLLMs` 18 + `mediaEngines` 3) com selo `.env` (sky) vs
   `Cofre` (emerald), input password + `Pegar Chave` (link oficial),
-  `corsWarningâ†’Proxy`, campo extra `cloudflare_account_id`, `Testar`
+  `corsWarningâ†’Proxy`, campo extra `cloudflare_account_id` (blur grava `CLOUDFLARE_ACCOUNT_ID` no `.env`), `Testar`
   (`testConnection`) / `Adicionar` (testa antes de gravar) / `Salvar`
   (percorre keys, placeholder = skip, testa antes, grava cofre + `.env`,
   resumo no botÃ£o) / `Resetar Cache` (`localStorage.clear+reload`).
@@ -821,15 +832,19 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
   prÃ©-limpeza/delta/saÃ­da sem invisÃ­vel), `media-audio` (6 testes: catÃ¡logo TTS
   9 plataformas puro no Node â€” template com `{{duration}}/{{words}}`, 10s=26 /
   60s=156 / 120s=312 palavras, filtro vozÃ—modelo, zero pt-PT â€” + browser mock
-  provando duraÃ§Ã£o/plataforma no payload e COMANDO completo visÃ­vel).
-  SuÃ­te determinÃ­stica = essas 19 specs
-  (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 97/97.
+  provando duraÃ§Ã£o/plataforma no payload e COMANDO completo visÃ­vel),
+  `guide-modal` (4 testes: guia F1 do Copywriting com >3000 chars + acordeão
+  Recolher/Expandir + atalho F1/Esc com instância única no keep-alive + guia
+  da bridge RevOps, 0 quota).
+  SuÃ­te determinÃ­stica = essas 20 specs
+  (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 101/101.
 - Com quota `:free` (50/dia, reset diÃ¡rio): `user-full` (140 linhas, `retries:1`,
   hero + â‰¥20 `Acessar MÃ³dulo`, navega 50 tabs + wallet/settings, bloqueios,
   2 geraÃ§Ãµes reais â€” Ideas ~40KB/740s polling `Baixar RelatÃ³rio`, Copy 340s
   `VariaÃ§Ã£o 1` â€” erro sempre friendly), `mx-live` (harness manual de visuais com
   log `[MX:tag] LEN STAR DASH DIV PT EN`; nÃ£o Ã© spec permanente), matriz P1
   (harness Node quando browser trava), auditoria rÃ¡pida (46 chamadas â€” agendar).
+- Helpers de naveÃ§Ã£o live: `e2e/helpers/sessionTabs.ts` â€" localiza tab por **id OU rÃ¡tulo PT** (`TAB_LABELS` das 50 sessÃµes) e lÃª o painel keep-alive visÃ­vel (`activePanelText`: filho de `[role=tabpanel]` com `display:block` + `aria-hidden="false"` â€" nunca o contÃªiner). Usado por `user-full`, `general-user`, `verification-cycle` e `full-verification`. **NÃ£o use Ã­ndice numÃ©rico de tab** (quebra a cada sessÃ£o nova) nem `[role="tabpanel"][aria-hidden="false"]` (nunca casa â€" ver `basic-flow.spec.ts`).
 - PadrÃ£o de spec: briefing mÃ­nimo, asserts de formato (nÃ£o de mÃ©rito), erros
   via `route.abort/fulfill`, `test.setTimeout` generoso (300-740s), workers â‰¤4.
 - Armadilhas conhecidas: painÃ©is keep-alive `display:none` no DOM (escopar
@@ -882,7 +897,17 @@ PBKDF2 100k SHA-256; IV 12 bytes). `setVaultKey` criptografa e remove legado
 navegador/perfil â€” nÃ£o sincroniza, some se limpar dados do site.
 `SettingsCenter â†’ Salvar ConfiguraÃ§Ãµes`: **testa a conexÃ£o antes**; se OK,
 grava no **cofre (efeito imediato) + `.env` via `POST /api/env` (dev)**;
-campo apagado remove dos dois; resumo exibido no botÃ£o.
+campo apagado remove dos dois; resumo exibido no botão.
+O campo extra `cloudflare_account_id` também vai para o `.env` (chave
+`CLOUDFLARE_ACCOUNT_ID`): no **blur** do campo (e no `Salvar`, quando há valor)
+o Centro faz `POST {provider:'cloudflare_account_id'}` — validação
+`^[A-Za-z0-9-]{8,64}$` (bloqueia URL/texto colado), **escrita idempotente**
+(conteúdo igual não reescreve → sem restart do Vite) e valor vazio remove a
+linha; em produção o POST responde 405 com a instrução do dashboard. O
+`callAI` resolve `{account_id}` como localStorage →
+`process.env.CLOUDFLARE_ACCOUNT_ID` (embutido pelo `define` do `vite.config`,
+fora do blanking por não ser segredo); feedback no campo sobrevive ao
+full-reload via `sessionStorage` one-shot.
 
 ### Proxy `/api/ai` (H1 fechado â€” produÃ§Ã£o sem segredos no bundle)
 `api/ai.ts` (function Vercel + rota no plugin dev, mesmo canal `ssrLoadModule`
@@ -1090,8 +1115,8 @@ das **personas curadas** do prompts.chat (CC0 1.0 â€” uso comercial livre).
 (auto-seleÃ§Ã£o + N chaves por provider + fallback robusto + turbo manual
 + correÃ§Ãµes da auditoria: cofre legÃ­vel, 5xx retriable, geminiâ†’fallback,
 max_tokens Anthropic, keep-alive da home â€” ver Â§14)
-`aiClient.ts`: `callAI` :288, pool+fallback :503, strict-system :809,
-timeouts :831, `testConnection` :948, GOLDEN :28, VISUAL :271. `vaultService.ts`: chaves :1-2,
+`aiClient.ts`: `callAI` :288, pool+fallback :503, strict-system :811,
+timeouts :833, `testConnection` :950, GOLDEN :28, VISUAL :271. `vaultService.ts`: chaves :1-2,
 `setVaultKey` :64, migraÃ§Ã£o :211. `keyPoolService.ts`: `MAX_POOL_KEYS` :12,
 `getApiKeys` :101, `isRetriableError` :134.
 `friendlyErrors.ts`: `toFriendlyError` :6. `stripCopyFormat.ts`:
@@ -1101,7 +1126,7 @@ timeouts :831, `testConnection` :948, GOLDEN :28, VISUAL :271. `vaultService.ts`
 `localEstimate` :226.
 `tools/diagnostic.ts`: `AuditMode` :67, `MARK` :167, `AUDIT_MODULE_IDS` :608,
 `runStressTestService` :438.
-`SettingsCenter.tsx`: POST `/api/env` :107, `handleSave` :152.
+`SettingsCenter.tsx`: POST `/api/env` :109, `handleSave` :154.
 `hooks/useAIGenerator.ts`: `isQuotaError` :12. `ToolLayout.tsx`:
 `OutputKindBadge` :10, `EngineLink` :24. `QuotaErrorModal.tsx`: `message` :8.
 Para revalidar: `python3 -c "import pathlib; t=pathlib.Path('services/core/aiClient.ts').read_text().splitlines(); print([i+1 for i,l in enumerate(t) if 'export const callAI' in l])"`.
@@ -1148,7 +1173,10 @@ Para revalidar: `python3 -c "import pathlib; t=pathlib.Path('services/core/aiCli
 - **9Router local offline**: timeout 3,5s â†’ penalizado 60s; suba o gateway em
   `localhost:20128` ou troque o primÃ¡rio.
 - **Cloudflare sem Account ID**: erro orienta a preencher
-  `cloudflare_account_id` no card; URLs `{account_id}` nunca usam placeholder.
+  `cloudflare_account_id` no card; **no blur ele grava `CLOUDFLARE_ACCOUNT_ID`
+  no `.env`** (dev — prod: dashboard Vercel → Environment Variables) e o
+  `callAI` cai de localStorage → `process.env.CLOUDFLARE_ACCOUNT_ID`; URLs
+  `{account_id}` nunca usam placeholder.
 - **Vite reiniciou ao salvar**: normal â€” gravar `.env` recarrega a pÃ¡gina (dev).
 - **`:free` fraco**: oscila idioma/divisores â€” prompts exigem, parsers toleram;
   re-tente ou troque de modelo no pool.
@@ -1392,6 +1420,74 @@ Para revalidar: `python3 -c "import pathlib; t=pathlib.Path('services/core/aiCli
   `strategy/personas.ts` (antes 8 pontos com `split(...)[1]` perdiam seÃ§Ãµes 3+);
   helper tolera `NOTA DO ESPECIALISTA` (LP) e rÃ³tulo com Markdown (sem resÃ­duo
   `****`); `textForensics` sem entradas duplicadas em WEAK/STRONG_VERBS.
+- Guias F1 detalhados (todas as 50 sessões) em 2026-10-02: schema `SessionGuide`
+  em `data/guides.ts` (registry `registerGuide`/`getGuide`, re-exportes
+  `export type` em `constants.ts`) + conteúdo em `data/guides/*.ts` (6 arquivos:
+  `strategy` 10, `video` 10, `visual` 8, `seo` 5, `sales` 8, `growth` 9 — 50
+  guias PT-BR com o que é/resultado/inputs/subsessões explicados, fluxo passo a
+  passo, dicas, erros comuns, integrações, limitações, bloqueios, exemplos e
+  FAQ; subsessões cobertas: TikTok 4 modos, YouTube 3 tipos, Media 4 abas,
+  Notebook 8 objetivos, Ideas abas+escopos, Copy briefingTypes, Persona
+  manual/auto/retrato, PRD perguntas+siteDNA, bridges via `config.fields`).
+  `SectionHelp` virou modal acordeão (`max-w-4xl`, "Expandir/Recolher tudo",
+  TTS, F1/Esc com registro global de instância única — resolve o keep-alive
+  multi-painel; `collapseAll` seta `false`, não `{}`); `sessionId` em
+  `ToolLayout`, `BridgeConfig` (incl. `aeprep`) e `StressDiagnostic`
+  (`stress`); wire 50/50 conferido (diff vazio nos dois sentidos). Correções do
+  loop: `IconMap` renderizado como nó (`{IconEl}`, não `<Icon/>`), union
+  `outputKind: 'text'|'image_prompt'|'mixed'` (guide) e badge do guia
+  `'text'|'image'|'dynamic'`, `constants.ts` `export type` (isolatedModules).
+  Gate: `tsc` 0, `doc:check` 31 âncoras + 3 invariantes, build limpo (canário
+  `.env` movido + `security:bundle` OK), smoke+qa-core 8/8, spec nova
+  `e2e/guide-modal.spec.ts` (4 testes, 0 quota).
+- Legibilidade do guia F1 + reparo de drift das specs live em 2026-10-02:
+  **modal do guia saiu em CAIXA ALTA bold ilegível** — o `SectionHelp` era
+  renderizado dentro dos `<h2>` das sessões (`uppercase font-black`) e
+  `text-transform`/`font-weight` herdam pela árvore DOM até em modal `fixed`;
+  classes `prose` não faziam nada (plugin `@tailwindcss/typography` ausente).
+  Fix: modal via **`createPortal(..., document.body)`** (quebra herança),
+  tipografia explícita (`text-[15px] leading-[1.75]`) e guard
+  `.guide-help-portal`/`.guide-help-content` no `index.css`.
+  **Specs live reparadas** (drift pré-existente, sem relação com o fix acima):
+  `user-full`/`verification-cycle`/`full-verification` usavam
+  `[role="tabpanel"][aria-hidden="false"]` (nunca casa) e `full-verification`
+  exigia igualdade exata rótulo===id + typo `targetBotão` (ReferenceError);
+  `general-user` navegava por índice obsoleto (PRD em 2026-09-27 deslocou tudo
+  em +1 — email abria o PRD e o `mode:'serial'` pulava 6 testes) — tudo
+  migrado para `e2e/helpers/sessionTabs.ts`; `user-full` ganhou
+  `test.setTimeout(240s)` (50 tabs), limiar 50 chars (Personas vazio = 86) e
+  assert novo do Settings ("Modelos Gratuitos OpenRouter"). Validação:
+  suíte completa 119/132 com todas as determinísticas verdes (7 falhas só
+  live) + `camada 1` (50 rótulos) e `user-full navega` aprovados.
+  **Ambiente**: `mx-live` falha com alerta `Cloudflare: informe seu Account
+  ID` — `.env` tem `CLOUDFLARE_API_KEY` sem `CLOUDFLARE_ACCOUNT_ID` e o
+  auto-selecionador prioriza o provider (preencher o ID ou tirar a chave).
+- CLOUDFLARE_ACCOUNT_ID gravado no `.env` pelo site em 2026-10-02 (fecha o
+  achado do item anterior: `mx-live` morria no alerta "informe seu Account
+  ID"): o Centro de Comando passou a persistir o valor do card Cloudflare — no
+  **blur** do campo (e no `Salvar`, quando há valor) faz `POST /api/env`
+  `{provider:'cloudflare_account_id'}` → linha `CLOUDFLARE_ACCOUNT_ID=` no
+  `.env` (dev), valor vazio remove. `vite.config.ts` ganhou `EXTRA_ENV_VARS`
+  (fora do `ENV_KEY_MAP` — o GET/relatório de chaves não mudou), validação
+  `^[A-Za-z0-9-]{8,64}$` (bloqueia URL/texto colado; CRLF já bloqueado) e
+  **escrita idempotente** (`out !== content` antes do `writeFileSync` —
+  conteúdo igual não reescreve → sem restart do Vite). Bug de simetria
+  corrigido no round-trip adicionar→remover: o `split('\n')` de arquivo que
+  termina em `\n` deixa um `''` fantasma no fim e o `push` da nova linha o
+  transformava em linha em branco → **`+1 \n` por rodada** (apareceu no teste
+  live: hash do `.env` não voltava ao original; agora o round-trip é
+  byte-idêntico — anexa via `splice` antes do fantasma). `define` embute
+  `process.env.CLOUDFLARE_ACCOUNT_ID` (não-segredo, entra na allowlist do
+  blanking; guard `SECRET_FILE_KEY_RE` e `security:bundle` não o flagram) e o
+  `aiClient` resolve `{account_id}` como localStorage → `process.env` (fallback
+  `.env`); feedback no campo ("✓ gravado no .env") sobrevive ao full-reload do
+  Vite via `sessionStorage` one-shot; em produção o POST responde 405 →
+  instrução do dashboard. Validação: `tsc` 0, `doc:check` (âncoras
+  recalibradas: aiClient strict :811 / timeouts :833 / testConnection :950 +
+  SettingsCenter :109/:154 — espelhadas em `check-anchors.py`), specs
+  smoke+qa-core+server-proxy **17/17**, round-trip live por curl (400
+  inválido → gravação → idempotência sem restart → remoção → `.env`
+  byte-idêntico ao hash `357EF07F…`).
 - Para vigiar: contagem 50 no tÃ­tulo do Â§4, tabela de divisores completa
   (13 + NOTA), `AUDIT_MODULE_IDS.length === 46`.
 
