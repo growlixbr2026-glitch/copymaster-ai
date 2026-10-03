@@ -3,16 +3,14 @@ import { Layers, Copy, RefreshCw, BrainCircuit, ImagePlus, FileSearch, Wand2, Za
 import { getLocalizedLists } from '../constants';
 import { CREWAI_MARKETING_PERSONAS } from '../data/crewai-personas';
 import { generateCopyService, generateCorrectionService } from '../services/modules/copy/general'; 
-import { analyzeImageContextService, analyzePdfContextService } from '../services/modules/visual/analysis';
 import { getActivePersona, personaToContext } from '../services/personaService';
 import { useTranslation } from '../hooks/useTranslation';
 import { useSharedContext } from '../contexts/SharedContext';
 import { useAIGenerator } from '../hooks/useAIGenerator';
+import { useFileAnalysis } from '../hooks/useFileAnalysis';
 import SpeechInput from './SpeechInput';
-import { resizeImage } from '../utils/imageUtils';
 import { PostType, FunnelStage, CopyParams } from '../types';
 import { RefinementToolbar } from './RefinementToolbar';
-import { toFriendlyError } from '../services/friendlyErrors';
 import { SectionHelp } from './SectionHelp';
 import { OutputKindBadge } from './ToolLayout';
 import { stripCopyMarkdown, splitCopyVariants, splitNotaBlock } from '../utils/stripCopyFormat';
@@ -25,12 +23,12 @@ export default function CopyGenerator({ language }: { language: string }) {
   const { socialPlatforms, postTypes, funnelStages, methodologies, tones, triggers } = getLocalizedLists(langCode);
   
   const { loading, error, generateStream, setError } = useAIGenerator();
+  // Análise de imagem/PDF compartilhada com CommentResponder (hooks/useFileAnalysis).
+  const { analyzingFile, fileName, analyzeFile } = useFileAnalysis(language);
 
   const [generatedCopies, setGeneratedCopies] = useState<{copy: string, note: string | null}[]>([]);
   const [activeTab, setActiveTab] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const [analyzingFile, setAnalyzingFile] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
   const [showNoteModal, setShowNoteModal] = useState(false);
 
   // CrewAI: persona especialista (prompts.chat)
@@ -87,39 +85,10 @@ Funcionalidades de Elite:
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'imagem' | 'pdf') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setFileName(file.name);
-    setAnalyzingFile(true);
-    try {
-        let analysis = "";
-        if (type === 'imagem') {
-            const base64 = await resizeImage(file, 1024);
-            const res = await analyzeImageContextService(base64, language);
-            if (res.error) throw new Error(res.error);
-            analysis = res.text;
-        } else {
-            const reader = new FileReader();
-            const base64: string = await new Promise((res) => {
-                reader.onload = () => res(reader.result as string);
-                reader.readAsDataURL(file);
-            });
-            const res = await analyzePdfContextService(base64, language);
-            if (res.error) throw new Error(res.error);
-            analysis = res.text;
-        }
-        // Só o conteúdo factual entra no briefing (nota isolada não vaza p/ o prompt).
-        const facts = (analysis || '').split("|||NOTA_DIVIDER|||")[0].trim();
-        if (!facts) {
-            setFileName(null);
-            setError(toFriendlyError("A análise do arquivo veio vazia. Tente outro arquivo ou descreva o briefing manualmente."));
-            return;
-        }
-        setSimpleInput(facts);
-    } catch (err: any) {
-        setFileName(null);
-        setError(toFriendlyError("Erro ao analisar arquivo: " + (err?.message || err)));
-    } finally {
-        setAnalyzingFile(false);
-    }
+    e.target.value = ''; // libera reenviar o MESMO arquivo após uma falha
+    const r = await analyzeFile(file, type);
+    if ('facts' in r) setSimpleInput(r.facts);
+    else setError(r.error); // hook já limpa fileName e formata via toFriendlyError
   };
 
   // Extrai variações REAIS em texto puro copia-cola (sem Markdown, sem

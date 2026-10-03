@@ -2,7 +2,8 @@ export type DividerKind =
   | 'DIVIDER' | 'NOTA_DIVIDER' | 'EMAIL_DIVIDER' | 'ADS_DIVIDER'
   | 'SLIDE_DIVIDER' | 'QUOTE_DIVIDER' | 'CITATION_DIVIDER' | 'LETTERING_DIVIDER'
   | 'MEME_DIVIDER' | 'INSP_DIVIDER' | 'LOGO_OPTION_DIVIDER' | 'YT_OPTION_DIVIDER'
-  | 'SCENE_DIVIDER' | 'SCHEMA_DIVIDER' | 'PRD_DIVIDER' | 'CONFIG_END';
+  | 'SCENE_DIVIDER' | 'SCHEMA_DIVIDER' | 'PRD_DIVIDER' | 'CONFIG_END'
+  | 'COMMENT_DIVIDER';
 
 const ZAFRA = 'Café ZAFRA-42';
 const MARK = 'ZAFRA-42';
@@ -26,6 +27,10 @@ export const mockTextWithNota = (briefing: string, kind: string) =>
 
 export const mockEmail = (briefing: string, count: number) =>
   Array.from({ length: count }, (_, i) => `${body(briefing, `Email ${i + 1}`)} — ${MARK}`).join('\n|||EMAIL_DIVIDER|||\n') + `\n|||NOTA_DIVIDER|||\n${note('Email Harness')}`;
+
+/** Responder Comentários (sessão 51): N variações em PT + Nota isolada. */
+export const mockComments = (briefing: string, count = 2) =>
+  Array.from({ length: count }, (_, i) => `${body(briefing, `Variação ${i + 1}`)} — resposta ${i + 1} contextual — ${MARK}`).join('\n|||COMMENT_DIVIDER|||\n') + `\n|||NOTA_DIVIDER|||\n${note('CommentResponder Harness — janela de resposta da rede')}`;
 
 export const mockAds = (briefing: string) =>
   Array.from({ length: 3 }, (_, i) => `${body(briefing, `ADS ${i + 1}`)} — ${MARK}`).join('\n|||ADS_DIVIDER|||\n') + `\n|||NOTA_DIVIDER|||\n${note('Ads Harness')}`;

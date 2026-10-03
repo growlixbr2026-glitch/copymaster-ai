@@ -35,6 +35,7 @@ export interface CommentResponderParams {
 
 /** Normas por rede (janela de resposta, densidade, registro) — pesquisa 2026. */
 const PLATFORM_NOTES: Array<{ match: string[]; note: string }> = [
+    { match: ['automático', 'automatic'], note: 'Rede não definida: identifique a rede pelo formato da fonte (extensão, tom, menções) e aplique a janela ideal — X = minutos, LinkedIn = 1ª hora, Instagram/Threads = primeiras horas, YouTube = dias.' },
     { match: ['linkedin'], note: 'LinkedIn: profissional e específico — 15+ palavras, dado ou observação concreta + pergunta; a primeira hora tem ~3x mais respostas.' },
     { match: ['instagram'], note: 'Instagram: caloroso e pessoal, emoji com moderação, 2-3 linhas; responda nas primeiras horas enquanto o post ainda é testado.' },
     { match: ['tiktok'], note: 'TikTok: direto, leve e com linguagem jovem; humor leve funciona; fuja de tom corporativo.' },
@@ -72,7 +73,7 @@ const LENGTH_NOTES: Record<string, string> = {
 
 export const generateCommentResponseService = async (params: CommentResponderParams, onChunk?: (text: string) => void) => {
     const mode = params.mode || 'post';
-    const platform = params.platform || '✨ Automático (IA Define a Melhor)';
+    const platform = params.platform || 'Automático';
     const objective = params.objective || 'autoridade';
     const tone = params.tone || 'Profissional';
     const length = params.length || 'medio';

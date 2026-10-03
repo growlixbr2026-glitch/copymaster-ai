@@ -776,7 +776,7 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
 > Se um campo novo for adicionado ao serviÃ§o, atualize a interface aqui
 > na mesma PR (contrato docâ†”cÃ³digo).
 
-### Sistema (fora das 50 â€” botÃµes, nÃ£o tabs)
+### Sistema (fora das 51 â€" botÃµes, nÃ£o tabs)
 - **TokenDashboard** (`wallet`, 282 linhas, 100% local): grid provedores
   (sem chave = `opacity-60 grayscale`), donut ciclo (`getCurrentCycleUsage`,
   verde<75/amarelo<90/vermelho), limites + `renewalDay` editÃ¡veis, diagnÃ³stico
@@ -862,9 +862,13 @@ callAI(prompt: string, systemInstruction?: string, defaultModel?: string,
   provando duraÃ§Ã£o/plataforma no payload e COMANDO completo visÃ­vel),
   `guide-modal` (4 testes: guia F1 do Copywriting com >3000 chars + acordeão
   Recolher/Expandir + atalho F1/Esc com instância única no keep-alive + guia
-  da bridge RevOps, 0 quota).
-  SuÃ­te determinÃ­stica = essas 20 specs
-  (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 101/101.
+  da bridge RevOps, 0 quota),
+  `comment-responder` (4 testes: sessão 51 — fonte vazia bloqueia o botão,
+  análise de imagem mockada limpa ao trocar o tipo de fonte, PDF >3MB em
+  `role=alert`, geração `COMMENT_DIVIDER`×2 + Nota isolada sem divisor
+  vazado — 0 quota).
+  SuÃ­te determinÃ­stica = essas 21 specs
+  (inclui `full-user`/`fallback`/`army-*` mockadas) com `--workers=1`: 105/105.
 - Com quota `:free` (50/dia, reset diÃ¡rio): `user-full` (140 linhas, `retries:1`,
   hero + â‰¥20 `Acessar MÃ³dulo`, navega 51 tabs + wallet/settings, bloqueios,
   2 geraÃ§Ãµes reais â€” Ideas ~40KB/740s polling `Baixar RelatÃ³rio`, Copy 340s
@@ -1539,6 +1543,31 @@ Para revalidar: `python3 -c "import pathlib; t=pathlib.Path('services/core/aiCli
   COMMENT_DIVIDER+NOTA exatos e marcador ZAFRA-42 vindo da fonte).
   Specs: `sessionTabs.TAB_LABELS` + `general-user.TABS` + `payload-audit`
   (29 sessões) ganharam `commentResponder`.
+- Review do commit da sessão 51 corrigido em 2026-10-03 (1 HIGH + 6 MEDIUM +
+  LOWs, gate `tsc` 0 + build canário + `security:bundle` OK):
+  **HIGH i18n** — `CommentResponder` passava `language` cru ("Português
+  (Brasil)") para `getLocalizedLists` (ternário compara `'pt'`) → seletores em
+  EN e `Automatic (AI Selects Best)` chegando ao prompt; agora usa
+  `useTranslation().langCode` + `useEffect([langCode])` ressincronizando
+  `platform`/`tone` (padrão `MemeGenerator`). Confirmado: os 28 usos de
+  `getLocalizedLists` no projeto usam `langCode` (era o único desviante).
+  **Novo `hooks/useFileAnalysis.ts`** (extraído de `CopyGenerator` +
+  `CommentResponder`, que já estavam divergindo): `FileReader` com
+  `onerror/onabort` (busy nunca trava até F5), validação MIME + **teto de
+  3 MB em PDF** (base64 ×4/3 cabe no corpo de 6 MB do `/api/ai`), análise
+  vazia → erro visível (§8) e mensagens via `toFriendlyError` (nunca JSON
+  cru). Narrowing por `'facts' in r` — o tsconfig não tem `strict` e nesse
+  modo o `else` do truthiness não estreita união discriminada (verificado
+  empirico no TS do projeto). **Demais fixes**: trocar o tipo de fonte limpa
+  `extracted`/`fileName` (análise de imagem não vira "PDF"); `role="alert"`
+  no box de erro, `aria-pressed` nos toggles Modo/Fonte e `aria-current` na
+  aba de variação (sem `role="tab"` de propósito — inflaria
+  `getByRole('tab').count()` nas specs de contagem de sidebar); `platformNote`
+  ganhou nota para "Automático" (detectar a rede pela fonte) e o default do
+  serviço virou `Automático` (sem label PT hardcoded). **Docs/specs**:
+  AGENTS §4-heading "fora das 51", §6 com a spec nova; `user-full` 50→51;
+  nova `e2e/comment-responder.spec.ts` (4 testes, 0 quota) + factory
+  `mockComments` + `COMMENT_DIVIDER` no `DividerKind` de `mockFactories`.
 - Para vigiar: contagem 51 no tÃ­tulo do Â§4, tabela de divisores completa
   (14 + NOTA), `AUDIT_MODULE_IDS.length === 47`.
 

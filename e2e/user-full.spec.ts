@@ -18,8 +18,8 @@ test('usuario: home hero + todas ferramentas listadas', async ({ page }) => {
   expect(errors, JSON.stringify(errors.slice(0,3))).toEqual([]);
 });
 
-test('usuario: navega 50 sessoes via sidebar sem quebrar', async ({ page }) => {
-  // 50 tabs × (click + 1500ms) + lazy chunks + wallet/settings ≈ 90s+.
+test('usuario: navega 51 sessoes via sidebar sem quebrar', async ({ page }) => {
+  // 51 tabs × (click + 1500ms) + lazy chunks + wallet/settings ≈ 90s+.
   test.setTimeout(240000);
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(String(e).slice(0,200)));
@@ -31,10 +31,10 @@ test('usuario: navega 50 sessoes via sidebar sem quebrar', async ({ page }) => {
   await page.waitForTimeout(900);
   await expect(page.locator('input[placeholder*="consultoria"]').first()).toBeVisible({ timeout: 10000 });
 
-  // 50 tabs no sidebar (wallet/settings sao botoes, nao tabs)
+  // 51 tabs no sidebar (wallet/settings sao botoes, nao tabs)
   const tabs = page.getByRole('tab');
   const n = await tabs.count();
-  expect(n, 'sidebar tabs').toBeGreaterThanOrEqual(50);
+  expect(n, 'sidebar tabs').toBeGreaterThanOrEqual(51);
   for (let i=0;i<n;i++) {
     await tabs.nth(i).click();
     // Aguarda o painel visível (keep-alive: display:none → display:block)

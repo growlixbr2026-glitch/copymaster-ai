@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, Home, Lock, Unlock, ImagePlus, FileText, Loader2, CheckCircle2 } from 'lucide-react';
 import { getLocalizedLists } from '../constants';
 import { useSharedContext } from '../contexts/SharedContext';
 import { useAIGenerator } from '../hooks/useAIGenerator';
+import { useTranslation } from '../hooks/useTranslation';
+import { useFileAnalysis } from '../hooks/useFileAnalysis';
 import { generateCommentResponseService, COMMENT_DIVIDER } from '../services/modules/social/commentResponder';
-import { analyzeImageContextService, analyzePdfContextService } from '../services/modules/visual/analysis';
-import { resizeImage } from '../utils/imageUtils';
 import { OutputKindBadge } from './ToolLayout';
 import { SectionHelp } from './SectionHelp';
 import { RefinementToolbar } from './RefinementToolbar';
@@ -30,8 +30,12 @@ const LENGTHS = [
 
 export default function CommentResponder({ language }: { language: string }) {
   const { setActiveTab: setAppActiveTab } = useSharedContext();
+  const { langCode } = useTranslation(language);
   const { loading, error, generateStream, setError } = useAIGenerator();
-  const lists = getLocalizedLists(language);
+  // langCode ('pt'|'es'|'en') — passar `language` cru ("Português (Brasil)")
+  // nunca casa com o ternário de getLocalizedLists e renderiza tudo em EN.
+  const lists = getLocalizedLists(langCode);
+  const { analyzingFile, fileName, setFileName, analyzeFile } = useFileAnalysis(language);
 
   const [mode, setMode] = useState<'post' | 'comment'>('post');
   const [sourceType, setSourceType] = useState<'text' | 'image' | 'pdf'>('text');
@@ -44,8 +48,14 @@ export default function CommentResponder({ language }: { language: string }) {
   const [sourceText, setSourceText] = useState('');
   const [extra, setExtra] = useState('');
   const [extracted, setExtracted] = useState('');
-  const [fileName, setFileName] = useState('');
-  const [analyzingFile, setAnalyzingFile] = useState(false);
+
+  // Troca de idioma re-sincroniza os defaults dos seletores: sem isto, o valor
+  // antigo (ex.: a opção EN) continuaria selecionado e viaja para o prompt.
+  useEffect(() => {
+    setPlatform(lists.socialPlatforms[0]);
+    setTone(lists.tones[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [langCode]);
 
   const [variants, setVariants] = useState<string[]>([]);
   const [activeVar, setActiveVar] = useState(0);
@@ -61,36 +71,24 @@ export default function CommentResponder({ language }: { language: string }) {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'imagem' | 'pdf') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setFileName(file.name);
-    setAnalyzingFile(true);
-    try {
-      let analysis = '';
-      if (type === 'imagem') {
-        const base64 = await resizeImage(file, 1024);
-        const res = await analyzeImageContextService(base64, language);
-        if (res.error) throw new Error(res.error);
-        analysis = res.text;
-      } else {
-        const reader = new FileReader();
-        const base64: string = await new Promise((res) => {
-          reader.onload = () => res(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-        const res = await analyzePdfContextService(base64, language);
-        if (res.error) throw new Error(res.error);
-        analysis = res.text;
-      }
-      // Só os fatos entram na fonte (a Nota isolada da análise não vaza p/ o prompt).
-      const facts = (analysis || '').split('|||NOTA_DIVIDER|||')[0];
-      setExtracted(facts.trim());
-    } catch (err: any) {
-      setError(err?.message || 'Não consegui ler o arquivo. Tente novamente.');
-      setFileName('');
+    e.target.value = ''; // libera reenviar o MESMO arquivo após uma falha
+    const r = await analyzeFile(file, type);
+    if ('facts' in r) {
+      setExtracted(r.facts);
+    } else {
+      // Análise falhou ou veio vazia: nunca reaproveita a fonte antiga (§8).
       setExtracted('');
-    } finally {
-      setAnalyzingFile(false);
-      e.target.value = '';
+      setError(r.error);
     }
+  };
+
+  // Trocar o tipo de fonte NÃO pode deixar a análise do tipo anterior
+  // fingindo ser a nova (imagem analisada virando "PDF" sem PDF nenhum).
+  const changeSourceType = (t: 'text' | 'image' | 'pdf') => {
+    if (t === sourceType) return;
+    setSourceType(t);
+    setExtracted('');
+    setFileName('');
   };
 
   const handleGenerate = () => {
@@ -166,12 +164,14 @@ export default function CommentResponder({ language }: { language: string }) {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setMode('post')}
+                  aria-pressed={mode === 'post'}
                   className={`py-3 px-2 text-[10px] font-black uppercase rounded-lg transition-all border ${mode === 'post' ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'}`}
                 >
                   Comentar na postagem
                 </button>
                 <button
                   onClick={() => setMode('comment')}
+                  aria-pressed={mode === 'comment'}
                   className={`py-3 px-2 text-[10px] font-black uppercase rounded-lg transition-all border ${mode === 'comment' ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'}`}
                 >
                   Responder comentário
@@ -186,7 +186,8 @@ export default function CommentResponder({ language }: { language: string }) {
                 {([['text', 'Texto'], ['image', 'Imagem'], ['pdf', 'PDF']] as const).map(([id, lbl]) => (
                   <button
                     key={id}
-                    onClick={() => setSourceType(id)}
+                    onClick={() => changeSourceType(id)}
+                    aria-pressed={sourceType === id}
                     className={`py-2.5 px-1 text-[10px] font-black uppercase rounded-lg transition-all border ${sourceType === id ? 'bg-indigo-500 text-white border-indigo-400' : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'}`}
                   >
                     {lbl}
@@ -320,7 +321,7 @@ export default function CommentResponder({ language }: { language: string }) {
           </div>
 
           {error && (
-            <div className="bg-red-950/50 border border-red-500/30 rounded-xl p-4 mb-4">
+            <div role="alert" className="bg-red-950/50 border border-red-500/30 rounded-xl p-4 mb-4">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
@@ -334,6 +335,7 @@ export default function CommentResponder({ language }: { language: string }) {
                       <button
                         key={i}
                         onClick={() => setActiveVar(i)}
+                        aria-current={activeVar === i ? 'true' : undefined}
                         className={`px-4 py-2 rounded-lg text-xs font-black uppercase transition-all ${activeVar === i ? 'bg-amber-500 text-slate-950' : 'bg-slate-950 text-slate-400 border border-slate-800 hover:border-slate-700'}`}
                       >
                         Variação {i + 1}
